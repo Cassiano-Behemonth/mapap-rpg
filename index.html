@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa da Ilha - RPG 1920s</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(to bottom, #1a1a1a, #0f0f0f);
+            color: #d4c5a9;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 3px solid #3d3426;
+            margin-bottom: 30px;
+            background: linear-gradient(to bottom, rgba(61, 52, 38, 0.2), transparent);
+        }
+
+        h1 {
+            font-size: 3.5em;
+            color: #d4c5a9;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+            letter-spacing: 8px;
+            font-weight: bold;
+        }
+
+        /* Toggle Switch Dia/Noite - Simples */
+        .day-night-switch {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(42, 37, 32, 0.9);
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 1px solid #3d3426;
+            font-size: 0.75em;
+            color: #8b7d6b;
+            z-index: 100;
+        }
+
+        .day-night-switch label {
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.9em;
+        }
+
+        .day-night-switch input[type="checkbox"] {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            appearance: none;
+            background: #3d3426;
+            outline: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid #4d4436;
+        }
+
+        .day-night-switch input:checked {
+            background: #6d5a4a;
+        }
+
+        .day-night-switch input:before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            top: 1px;
+            left: 2px;
+            background: #8b7d6b;
+            transition: 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .day-night-switch input:checked:before {
+            left: 20px;
+            background: #d4c5a9;
+        }
+
+        .subtitle {
+            font-style: italic;
+            color: #8b7d6b;
+            margin-top: 10px;
+        }
+
+        .map-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .map-container.panel-open {
+            grid-template-columns: 2fr 1fr;
+        }
+
+        .main-map {
+            position: relative;
+            background: #2a2520;
+            border: 3px solid #3d3426;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .back-button {
+            padding: 10px 20px;
+            background: #5d4a3a;
+            color: #ffd700;
+            border: 2px solid #6d5a4a;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            font-size: 1em;
+            font-weight: bold;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-button.visible {
+            display: block;
+        }
+
+        .back-button:hover {
+            background: #6d5a4a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+
+        .current-map-title {
+            flex: 1;
+            color: #ffd700;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .control-btn {
+            padding: 8px 16px;
+            background: #3d3426;
+            color: #d4c5a9;
+            border: 2px solid #4d4436;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Georgia', serif;
+            font-size: 0.9em;
+        }
+
+        .control-btn:hover {
+            background: #4d4436;
+            transform: translateY(-2px);
+        }
+
+        .control-btn.active {
+            background: #6d6446;
+            border-color: #7d7456;
+        }
+
+        .map-image-container {
+            position: relative;
+            width: 100%;
+            background: #1a1612;
+            border: 2px solid #3d3426;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .map-image-container.placing-character {
+            cursor: copy;
+        }
+
+        .map-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Hotspots de Localização */
+        .hotspot {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+            z-index: 10;
+        }
+
+        .hotspot:hover {
+            transform: scale(1.2);
+            filter: brightness(1.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .hotspot-marker {
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, rgba(255,200,100,0.9), rgba(200,150,50,0.6));
+            border: 2px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255,200,100,0.8);
+        }
+
+        /* Marcadores de Personagens */
+        .character-marker {
+            position: absolute;
+            cursor: move;
+            transition: all 0.2s ease;
+            z-index: 20;
+            user-select: none;
+        }
+
+        .character-marker:hover {
+            transform: scale(1.15);
+            z-index: 30;
+        }
+
+        .character-marker.selected {
+            z-index: 25;
+        }
+
+        .character-marker.selected .character-icon {
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 4px 12px rgba(0,0,0,0.6);
+            border-width: 4px;
+        }
+
+        .character-marker.dragging {
+            opacity: 0.7;
+            cursor: grabbing;
+        }
+
+        .character-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .character-label {
+            position: absolute;
+            top: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            white-space: nowrap;
+            pointer-events: none;
+            border: 1px solid;
+        }
+
+        .character-remove {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: #c41e3a;
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .character-marker:hover .character-remove {
+            opacity: 1;
+        }
+
+        /* Tipos de personagens */
+        .character-player .character-icon {
+            background: rgba(30, 144, 255, 0.8);
+            border-color: #1e90ff;
+        }
+        .character-player .character-label {
+            border-color: #1e90ff;
+        }
+
+        .character-npc .character-icon {
+            background: rgba(50, 205, 50, 0.8);
+            border-color: #32cd32;
+        }
+        .character-npc .character-label {
+            border-color: #32cd32;
+        }
+
+        .character-enemy .character-icon {
+            background: rgba(220, 20, 60, 0.8);
+            border-color: #dc143c;
+        }
+        .character-enemy .character-label {
+            border-color: #dc143c;
+        }
+
+        .character-mystery .character-icon {
+            background: rgba(148, 0, 211, 0.8);
+            border-color: #9400d3;
+        }
+        .character-mystery .character-label {
+            border-color: #9400d3;
+        }
+
+        .location-info {
+            background: #2a2520;
+            border: 3px solid #3d3426;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            height: fit-content;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            display: none;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .location-info.visible {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .panel-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #c41e3a;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+            line-height: 1;
+        }
+
+        .panel-close-btn:hover {
+            background: #d41e3a;
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.5);
+        }
+
+        .right-click-hint {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(42, 37, 32, 0.95);
+            color: #d4c5a9;
+            padding: 15px 25px;
+            border-radius: 8px;
+            border: 2px solid #3d3426;
+            font-size: 0.95em;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .location-info h2 {
+            color: #d4c5a9;
+            border-bottom: 2px solid #3d3426;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .character-form {
+            background: #1a1612;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #3d3426;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #b8a989;
+            font-size: 0.9em;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            background: #2a2520;
+            border: 1px solid #3d3426;
+            border-radius: 4px;
+            color: #d4c5a9;
+            font-family: 'Georgia', serif;
+        }
+
+        .add-character-btn {
+            width: 100%;
+            padding: 10px;
+            background: #4d4436;
+            color: #d4c5a9;
+            border: 2px solid #5d5446;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            transition: all 0.3s ease;
+        }
+
+        .add-character-btn:hover {
+            background: #5d5446;
+            transform: translateY(-2px);
+        }
+
+        .characters-list {
+            margin-top: 20px;
+        }
+
+        .character-item {
+            background: #1a1612;
+            padding: 12px;
+            border-radius: 4px;
+            border-left: 4px solid;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .character-item.player { border-color: #1e90ff; }
+        .character-item.npc { border-color: #32cd32; }
+        .character-item.enemy { border-color: #dc143c; }
+        .character-item.mystery { border-color: #9400d3; }
+
+        .character-info {
+            flex: 1;
+        }
+
+        .character-name {
+            font-weight: bold;
+            color: #d4c5a9;
+        }
+
+        .character-type {
+            font-size: 0.8em;
+            color: #8b7d6b;
+            font-style: italic;
+        }
+
+        .character-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            background: #3d3426;
+            border: 1px solid #4d4436;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+            color: #d4c5a9;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #4d4436;
+        }
+
+        .location-details {
+            display: none;
+        }
+
+        .location-details.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .location-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border: 2px solid #3d3426;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .location-description {
+            line-height: 1.6;
+            color: #b8a989;
+            margin-bottom: 15px;
+        }
+
+        .location-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            background: #3d3426;
+            color: #d4c5a9;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            border: 1px solid #4d4436;
+        }
+
+        .default-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8b7d6b;
+            font-style: italic;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 10px;
+            background: #3d3426;
+            color: #d4c5a9;
+            border: 2px solid #4d4436;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Georgia', serif;
+        }
+
+        .nav-btn:hover {
+            background: #4d4436;
+            border-color: #5d5446;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: #d4c5a9;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            border: 1px solid #3d3426;
+            white-space: nowrap;
+        }
+
+        /* Lightbox para visualização de mapas */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox-content {
+            position: relative;
+            max-width: 95%;
+            max-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .lightbox-image {
+            max-width: 100%;
+            max-height: 85vh;
+            object-fit: contain;
+            border: 3px solid #3d3426;
+            border-radius: 8px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        .lightbox-title {
+            color: #d4c5a9;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(61, 52, 38, 0.9);
+            color: #d4c5a9;
+            border: 2px solid #4d4436;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10000;
+        }
+
+        .lightbox-close:hover {
+            background: #4d4436;
+            transform: scale(1.1);
+        }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(61, 52, 38, 0.9);
+            color: #d4c5a9;
+            border: 2px solid #4d4436;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .lightbox-nav:hover {
+            background: #4d4436;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .lightbox-prev {
+            left: 20px;
+        }
+
+        .lightbox-next {
+            right: 20px;
+        }
+
+        .lightbox-info {
+            background: rgba(26, 22, 18, 0.95);
+            padding: 15px 25px;
+            border-radius: 8px;
+            border: 2px solid #3d3426;
+            margin-top: 15px;
+            text-align: center;
+            color: #b8a989;
+            max-width: 600px;
+        }
+
+        /* Selection Box */
+        .selection-box {
+            position: absolute;
+            border: 2px dashed #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+        }
+
+        .selection-box.active {
+            display: block;
+        }
+
+        .map-image-container.selecting {
+            cursor: crosshair;
+        }
+
+        .location-image {
+            cursor: zoom-in;
+        }
+
+        .location-image:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 1200px) {
+            .map-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ILHA ESPIRAL</h1>
+        </header>
+
+        <div class="map-container">
+            <div class="main-map">
+                <div class="map-controls">
+                    <button class="back-button" id="backButton" onclick="switchToGeneralMap()">
+                        ← Voltar ao Mapa Geral
+                    </button>
+                    <div class="current-map-title" id="currentMapTitle">Mapa Geral da Ilha</div>
+                </div>
+                
+                <div class="map-controls">
+                    <button class="control-btn" onclick="toggleCharacterMode()">
+                        ➕ Adicionar Personagem
+                    </button>
+                    <button class="control-btn" onclick="toggleLocations()" id="toggleLocationsBtn">
+                        📍 Ocultar Locais
+                    </button>
+                    <button class="control-btn" onclick="selectAllCharacters()">
+                        ☑️ Selecionar Todos
+                    </button>
+                    <button class="control-btn" onclick="deselectAll()">
+                        ☐ Deselecionar
+                    </button>
+                    <button class="control-btn" onclick="deleteSelected()">
+                        🗑️ Remover Selecionados
+                    </button>
+                </div>
+                
+                <div style="margin-bottom: 15px; padding: 8px; background: rgba(26, 22, 18, 0.5); border-radius: 4px; border: 1px solid #3d3426; font-size: 0.85em; color: #8b7d6b; text-align: center;">
+                    💡 Arraste para selecionar | Ctrl+Click para múltiplos | Delete para remover
+                </div>
+
+                <div class="map-image-container" id="mapContainer">
+                    <div class="selection-box" id="selectionBox"></div>
+                    
+                    <!-- Switch Dia/Noite Simples -->
+                    <div class="day-night-switch">
+                        <label>Noite</label>
+                        <input type="checkbox" id="dayNightToggle" onchange="toggleDayNight()">
+                        <label>Dia</label>
+                    </div>
+                    
+                    <!-- 
+                    ========================================================================
+                    📁 IMAGEM DO MAPA PRINCIPAL
+                    ========================================================================
+                    COLOQUE O ARQUIVO "Mapa_Geral.png" NA MESMA PASTA DESTE HTML
+                    
+                    Se quiser usar outro caminho, modifique o src abaixo:
+                    Por exemplo: src="imagens/Mapa_Geral.png" ou src="./mapas/Mapa_Geral.png"
+                    ========================================================================
+                    -->
+                    <img src="Mapa_Geral.png" alt="Mapa Geral da Ilha" class="map-image" id="mapImage" 
+                         onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%221000%22><rect fill=%22%231a1612%22 width=%22800%22 height=%221000%22/><text x=%2250%25%22 y=%2250%25%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%23d4c5a9%22 text-anchor=%22middle%22>Mapa não carregado - Clique com botão direito e %22Abrir imagem em nova aba%22</text></svg>'">
+                    
+                    <!-- Hotspots de Localização -->
+                    <div class="hotspot location-hotspot" style="top: 12%; left: 25%;" data-location="mansao" title="Mansão">
+                        <div class="hotspot-marker"></div>
+                    </div>
+                    
+                    <div class="hotspot location-hotspot" style="top: 25%; right: 20%;" data-location="montanha" title="Montanha">
+                        <div class="hotspot-marker"></div>
+                    </div>
+                    
+                    <div class="hotspot location-hotspot" style="top: 45%; right: 20%;" data-location="floresta" title="Floresta">
+                        <div class="hotspot-marker"></div>
+                    </div>
+                    
+                    <div class="hotspot location-hotspot" style="top: 75%; right: 25%;" data-location="cidade" title="Cidade">
+                        <div class="hotspot-marker"></div>
+                    </div>
+                    
+                    <div class="hotspot location-hotspot" style="top: 55%; left: 60%;" data-location="caminho" title="Caminho">
+                        <div class="hotspot-marker"></div>
+                    </div>
+                    
+                    <div class="hotspot location-hotspot" style="top: 50%; left: 15%;" data-location="pantano" title="Pântano">
+                        <div class="hotspot-marker"></div>
+                    </div>
+                    
+                    <!-- Personagens serão adicionados aqui dinamicamente -->
+                </div>
+            </div>
+
+            <div class="location-info" id="controlPanel">
+                <button class="panel-close-btn" onclick="closeControlPanel()" title="Fechar Painel (ESC)">✕</button>
+                <h2>Painel de Controle</h2>
+                
+                <!-- Formulário de Personagem -->
+                <div class="character-form" id="characterForm" style="display: none;">
+                    <h3 style="margin-bottom: 15px; color: #d4c5a9;">Novo Personagem</h3>
+                    <div class="form-group">
+                        <label>Nome:</label>
+                        <input type="text" id="charName" placeholder="Ex: Detective Morgan">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo:</label>
+                        <select id="charType">
+                            <option value="player">🧑 Jogador (Azul)</option>
+                            <option value="npc">👤 NPC Aliado (Verde)</option>
+                            <option value="enemy">⚔️ Inimigo (Vermelho)</option>
+                            <option value="mystery">❓ Mistério (Roxo)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ícone (emoji):</label>
+                        <input type="text" id="charIcon" placeholder="Ex: 🕵️" maxlength="2">
+                    </div>
+                    <button class="add-character-btn" onclick="startPlacingCharacter()">
+                        📍 Clique no mapa para posicionar
+                    </button>
+                </div>
+
+                <!-- Lista de Personagens -->
+                <div class="characters-list">
+                    <h3 style="margin-bottom: 10px; color: #d4c5a9;">Personagens no Mapa Atual</h3>
+                    <p style="font-size: 0.85em; color: #8b7d6b; margin-bottom: 15px; font-style: italic;">
+                        Cada mapa tem seus próprios personagens
+                    </p>
+                    <div id="charactersList">
+                        <p style="color: #8b7d6b; font-style: italic; text-align: center;">
+                            Nenhum personagem adicionado ainda
+                        </p>
+                    </div>
+                </div>
+
+                <div class="default-message" id="defaultMessage">
+                    <p>📍 Clique em um ponto luminoso no mapa para ver os detalhes da localização.</p>
+                </div>
+
+                <!-- 
+                ========================================================================
+                📁 IMAGENS NOS PAINÉIS DE DETALHES
+                ========================================================================
+                Estas imagens aparecem no painel lateral quando você clica em uma localização
+                São as MESMAS imagens dos mapas - se mudou o caminho acima, mude aqui também!
+                
+                Exemplo: se suas imagens estão em "imagens/montanha.png"
+                Troque: src="montanha.png" por src="imagens/montanha.png"
+                ========================================================================
+                -->
+
+                <!-- Detalhes das Localizações -->
+                <div class="location-details" id="montanha">
+                    <img src="" alt="Montanha" class="location-image" data-map-id="montanha">
+                    <h3>Montanha</h3>
+                    <p class="location-description">
+                        Um pico rochoso envolto em névoa antinatural que parece emanar da própria montanha. 
+                        Árvores mortas cercam um caminho íngreme que leva a uma entrada misteriosa no topo.
+                    </p>
+                    <div class="location-tags">
+                        <span class="tag">🌫️ Névoa Sobrenatural</span>
+                        <span class="tag">⚠️ Perigo Alto</span>
+                    </div>
+                </div>
+
+                <div class="location-details" id="floresta">
+                    <img src="" alt="Floresta" class="location-image" data-map-id="floresta">
+                    <h3>Floresta</h3>
+                    <p class="location-description">
+                        Floresta espessa com vegetação cerrada e antigas cabanas de caçadores abandonadas.
+                    </p>
+                    <div class="location-tags">
+                        <span class="tag">🌳 Vegetação Densa</span>
+                        <span class="tag">🏚️ Estruturas Antigas</span>
+                    </div>
+                </div>
+
+                <div class="location-details" id="cidade">
+                    <img src="" alt="Cidade" class="location-image" data-map-id="cidade">
+                    <h3>Cidade</h3>
+                    <p class="location-description">
+                        Pequena vila pesqueira dos anos 1920 com construções de madeira desgastadas.
+                    </p>
+                    <div class="location-tags">
+                        <span class="tag">⚓ Porto Ativo</span>
+                        <span class="tag">👥 População Local</span>
+                    </div>
+                </div>
+
+                <div class="location-details" id="caminho">
+                    <img src="" alt="Caminho" class="location-image" data-map-id="caminho">
+                    <h3>Caminho</h3>
+                    <p class="location-description">
+                        Estrada de terra que conecta a vila à mansão no alto da colina.
+                    </p>
+                    <div class="location-tags">
+                        <span class="tag">🌉 Ponte</span>
+                        <span class="tag">🛤️ Rota Principal</span>
+                    </div>
+                </div>
+
+                <div class="location-details" id="pantano">
+                    <img src="" alt="Pântano" class="location-image" data-map-id="pantano">
+                    <h3>Pântano</h3>
+                    <p class="location-description">
+                        Área alagada com pontes de madeira precárias e vegetação aquática.
+                    </p>
+                    <div class="location-tags">
+                        <span class="tag">💧 Terreno Alagado</span>
+                        <span class="tag">⚠️ Terreno Instável</span>
+                    </div>
+                </div>
+
+                <div class="location-details" id="mansao">
+                    <img src="" alt="Mansão" class="location-image" data-map-id="mansao">
+                    <h3>Mansão</h3>
+                    <p class="location-description">
+                        Grande mansão vitoriana em estado de abandono no topo de uma colina.
+                    </p>
+                    <div class="location-tags">
+                        <span class="tag">🕯️ Iluminação Fraca</span>
+                        <span class="tag">👻 Atividade Paranormal</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <!-- Lightbox para visualização de mapas -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+        <button class="lightbox-nav lightbox-prev" onclick="navigateLightbox(-1)">‹</button>
+        <button class="lightbox-nav lightbox-next" onclick="navigateLightbox(1)">›</button>
+        
+        <div class="lightbox-content">
+            <h2 class="lightbox-title" id="lightboxTitle"></h2>
+            <img src="" alt="" class="lightbox-image" id="lightboxImage">
+            <div class="lightbox-info" id="lightboxInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        // Estado da aplicação
+        let characters = [];
+        let nextCharId = 1;
+        let placingCharacter = null;
+        let locationsVisible = true;
+        let draggingChar = null;
+        
+        // Multi-selection state
+        let selectedCharacters = new Set();
+        let isSelecting = false;
+        let selectionStart = { x: 0, y: 0 };
+        let isDraggingGroup = false;
+        let dragGroupStart = { x: 0, y: 0 };
+
+        // Map switching state
+        let currentMap = 'general'; // 'general', 'montanha', 'floresta', 'cidade', 'caminho', 'pantano', 'mansao'
+        let charactersByMap = {
+            general: [],
+            montanha: [],
+            floresta: [],
+            cidade: [],
+            caminho: [],
+            pantano: [],
+            mansao: []
+        };
+
+        // ========================================================================
+        // 📁 CONFIGURAÇÃO DE IMAGENS - COLOQUE SUAS IMAGENS AQUI!
+        // ========================================================================
+        // 
+        // IMPORTANTE: Para cada mapa, você precisa de 2 versões:
+        // - Uma versão DIA (com sufixo _dia.png)
+        // - Uma versão NOITE (com sufixo _noite.png)
+        // 
+        // Exemplos de nomes de arquivo:
+        // - Mapa_Geral_dia.png e Mapa_Geral_noite.png
+        // - montanha_dia.png e montanha_noite.png
+        // - Floresta_dia.png e Floresta_noite.png
+        // 
+        // O sistema vai alternar automaticamente entre elas quando você
+        // clicar no botão ☀️/🌙
+        //
+        // Se você só tiver uma versão de cada imagem (sem _dia/_noite),
+        // o sistema vai carregar a imagem padrão normalmente.
+        // ========================================================================
+
+        const mapData = {
+            general: { 
+                name: 'Mapa Geral da Ilha', 
+                imgBase: 'Mapa_Geral',  // ✅ Mapa_Geral_dia.png / Mapa_Geral_noite.png (FALTA CRIAR!)
+                imgExt: '.png',
+                showHotspots: true
+            },
+            montanha: { 
+                name: 'Montanha', 
+                imgBase: 'montanha',  // ✅ montanha_dia.png / montanha_noite.png (FALTA CRIAR!)
+                imgExt: '.png',
+                showHotspots: false
+            },
+            floresta: { 
+                name: 'Floresta', 
+                imgBase: 'Floresta',  // ✅ Floresta_dia.png (TEM!) / Floresta_noite.png (FALTA!)
+                imgExt: '.png',
+                showHotspots: false
+            },
+            cidade: { 
+                name: 'Cidade', 
+                imgBase: 'Cidade',  // ✅ Cidade_dia.png (TEM!) / Cidade_noite.png (FALTA!)
+                imgExt: '.png',
+                showHotspots: false
+            },
+            caminho: { 
+                name: 'Caminho', 
+                imgBase: 'Caminho_Mansão_Cidade',  // ✅ Caminho_Mansão_Cidade_dia.png (TEM!) / ..._noite.png (FALTA!)
+                imgExt: '.png',
+                showHotspots: false
+            },
+            pantano: { 
+                name: 'Pântano', 
+                imgBase: 'Pantano',  // ✅ Pantano_dia.png (TEM!) / Pantano_noite.png (TEM!)
+                imgExt: '.png',
+                showHotspots: false
+            },
+            mansao: { 
+                name: 'Mansão', 
+                imgBase: 'Mansao',  // ✅ Mansao_dia.png (TEM!) / Mansao_noite.png (TEM!) - SEM ACENTO
+                imgExt: '.png',
+                showHotspots: false
+            }
+        };
+
+        // Estado do modo dia/noite
+        let isDayMode = false; // false = noite (padrão), true = dia
+
+        // Função para obter o caminho da imagem baseado no modo
+        function getMapImagePath(mapId) {
+            const map = mapData[mapId];
+            const suffix = isDayMode ? '_dia' : '_noite';
+            return map.imgBase + suffix + map.imgExt;
+        }
+
+        // ========================================================================
+        // FIM DA CONFIGURAÇÃO DE IMAGENS
+        // ========================================================================
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            loadAllCharactersFromStorage();
+            setupMultiSelection();
+            setupRightClickPanel();
+            
+            // Carregar modo dia/noite salvo
+            const savedMode = localStorage.getItem('rpgDayNightMode') || 'noite';
+            isDayMode = (savedMode === 'dia');
+            updateDayNightButton(savedMode);
+            
+            // Carregar último mapa visualizado (persistência)
+            const lastMap = localStorage.getItem('rpgLastViewedMap') || 'general';
+            switchToMap(lastMap);
+            
+            // Mostrar dica de botão direito na primeira vez
+            if (!localStorage.getItem('rpgRightClickHintShown')) {
+                showRightClickHint();
+                localStorage.setItem('rpgRightClickHintShown', 'true');
+            }
+        });
+
+        // ========== RIGHT CLICK PANEL CONTROL ==========
+        
+        function setupRightClickPanel() {
+            const mapContainer = document.getElementById('mapContainer');
+            const controlPanel = document.getElementById('controlPanel');
+            const mainContainer = document.querySelector('.map-container');
+            
+            // Prevenir menu de contexto padrão no mapa
+            mapContainer.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                openControlPanel();
+                return false;
+            });
+            
+            // Fechar com ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && controlPanel.classList.contains('visible')) {
+                    closeControlPanel();
+                }
+            });
+        }
+        
+        function openControlPanel() {
+            const controlPanel = document.getElementById('controlPanel');
+            const mainContainer = document.querySelector('.map-container');
+            
+            controlPanel.classList.add('visible');
+            mainContainer.classList.add('panel-open');
+        }
+        
+        function closeControlPanel() {
+            const controlPanel = document.getElementById('controlPanel');
+            const mainContainer = document.querySelector('.map-container');
+            
+            controlPanel.classList.remove('visible');
+            mainContainer.classList.remove('panel-open');
+        }
+        
+        function showRightClickHint() {
+            const hint = document.createElement('div');
+            hint.className = 'right-click-hint';
+            hint.innerHTML = '💡 <strong>Dica:</strong> Clique com botão direito no mapa para abrir o Painel de Controle';
+            document.body.appendChild(hint);
+            
+            setTimeout(() => {
+                hint.remove();
+            }, 5000);
+        }
+        
+        // ========== END RIGHT CLICK PANEL CONTROL ==========
+
+        // ========== DAY/NIGHT MODE SYSTEM ==========
+        
+        function toggleDayNight() {
+            const checkbox = document.getElementById('dayNightToggle');
+            
+            // Atualizar estado baseado no checkbox
+            isDayMode = checkbox.checked;
+            const newMode = isDayMode ? 'dia' : 'noite';
+            
+            // Salvar novo modo
+            localStorage.setItem('rpgDayNightMode', newMode);
+            
+            // Recarregar imagem do mapa atual
+            const mapImage = document.getElementById('mapImage');
+            mapImage.src = getMapImagePath(currentMap);
+        }
+        
+        function updateDayNightButton(mode) {
+            const checkbox = document.getElementById('dayNightToggle');
+            isDayMode = (mode === 'dia');
+            checkbox.checked = isDayMode;
+        }
+        
+        function updateAllLocationImages() {
+            // Atualizar todas as imagens dos painéis de detalhes
+            document.querySelectorAll('.location-image[data-map-id]').forEach(img => {
+                const mapId = img.getAttribute('data-map-id');
+                img.src = getMapImagePath(mapId);
+            });
+        }
+        
+        // ========== END DAY/NIGHT MODE SYSTEM ==========
+
+        function setupEventListeners() {
+            const mapContainer = document.getElementById('mapContainer');
+            const tooltip = document.getElementById('tooltip');
+
+            // Hotspots de localização
+            document.querySelectorAll('.location-hotspot').forEach(hotspot => {
+                hotspot.addEventListener('mouseenter', (e) => {
+                    tooltip.textContent = e.currentTarget.title;
+                    tooltip.style.opacity = '1';
+                });
+
+                hotspot.addEventListener('mousemove', (e) => {
+                    tooltip.style.left = (e.pageX + 15) + 'px';
+                    tooltip.style.top = (e.pageY + 15) + 'px';
+                });
+
+                hotspot.addEventListener('mouseleave', () => {
+                    tooltip.style.opacity = '0';
+                });
+
+                hotspot.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const location = hotspot.dataset.location;
+                    switchToMap(location);
+                });
+            });
+
+            // Clique no mapa para posicionar personagem
+            mapContainer.addEventListener('click', (e) => {
+                if (placingCharacter && e.target.classList.contains('map-image')) {
+                    const rect = e.target.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
+                    
+                    placeCharacter(x, y);
+                }
+            });
+        }
+
+        // ========== MULTI-SELECTION SYSTEM ==========
+        
+        function setupMultiSelection() {
+            const mapContainer = document.getElementById('mapContainer');
+            const mapImage = document.getElementById('mapImage');
+            const selectionBox = document.getElementById('selectionBox');
+
+            // Mouse down - start selection or group drag
+            mapContainer.addEventListener('mousedown', (e) => {
+                // Ignore if placing character or clicking on hotspot
+                if (placingCharacter || e.target.classList.contains('hotspot-marker')) return;
+                
+                // Check if clicking on a character
+                const clickedChar = e.target.closest('.character-marker');
+                
+                if (clickedChar) {
+                    const charId = parseInt(clickedChar.id.replace('char-', ''));
+                    
+                    // Ctrl+Click para adicionar/remover da seleção
+                    if (e.ctrlKey || e.metaKey) {
+                        toggleCharacterSelection(charId);
+                        return;
+                    }
+                    
+                    // Se clicou em personagem já selecionado, inicia drag de grupo
+                    if (selectedCharacters.has(charId)) {
+                        isDraggingGroup = true;
+                        dragGroupStart = { x: e.clientX, y: e.clientY };
+                        mapContainer.style.cursor = 'grabbing';
+                        return;
+                    }
+                    
+                    // Se clicou em personagem não selecionado, seleciona apenas ele
+                    deselectAll();
+                    selectCharacter(charId);
+                    isDraggingGroup = true;
+                    dragGroupStart = { x: e.clientX, y: e.clientY };
+                    mapContainer.style.cursor = 'grabbing';
+                    return;
+                }
+                
+                // Se clicou no mapa vazio, inicia seleção por caixa
+                if (e.target === mapImage || e.target === mapContainer) {
+                    if (!e.ctrlKey && !e.metaKey) {
+                        deselectAll();
+                    }
+                    
+                    isSelecting = true;
+                    const rect = mapImage.getBoundingClientRect();
+                    selectionStart.x = e.clientX - rect.left;
+                    selectionStart.y = e.clientY - rect.top;
+                    
+                    selectionBox.style.left = selectionStart.x + 'px';
+                    selectionBox.style.top = selectionStart.y + 'px';
+                    selectionBox.style.width = '0px';
+                    selectionBox.style.height = '0px';
+                    selectionBox.classList.add('active');
+                    mapContainer.classList.add('selecting');
+                }
+            });
+
+            // Mouse move - update selection box or drag group
+            document.addEventListener('mousemove', (e) => {
+                if (isDraggingGroup) {
+                    const deltaX = e.clientX - dragGroupStart.x;
+                    const deltaY = e.clientY - dragGroupStart.y;
+                    
+                    const rect = mapImage.getBoundingClientRect();
+                    const deltaXPercent = (deltaX / rect.width) * 100;
+                    const deltaYPercent = (deltaY / rect.height) * 100;
+                    
+                    moveSelectedCharacters(deltaXPercent, deltaYPercent);
+                    
+                    dragGroupStart = { x: e.clientX, y: e.clientY };
+                    return;
+                }
+                
+                if (isSelecting) {
+                    const rect = mapImage.getBoundingClientRect();
+                    const currentX = e.clientX - rect.left;
+                    const currentY = e.clientY - rect.top;
+                    
+                    const width = Math.abs(currentX - selectionStart.x);
+                    const height = Math.abs(currentY - selectionStart.y);
+                    const left = Math.min(currentX, selectionStart.x);
+                    const top = Math.min(currentY, selectionStart.y);
+                    
+                    selectionBox.style.left = left + 'px';
+                    selectionBox.style.top = top + 'px';
+                    selectionBox.style.width = width + 'px';
+                    selectionBox.style.height = height + 'px';
+                    
+                    // Update selection in real-time
+                    updateSelectionInBox(left, top, width, height, rect);
+                }
+            });
+
+            // Mouse up - end selection or drag
+            document.addEventListener('mouseup', (e) => {
+                if (isDraggingGroup) {
+                    isDraggingGroup = false;
+                    mapContainer.style.cursor = '';
+                    saveCharactersToStorage();
+                }
+                
+                if (isSelecting) {
+                    isSelecting = false;
+                    selectionBox.classList.remove('active');
+                    mapContainer.classList.remove('selecting');
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    if (selectedCharacters.size > 0 && !e.target.matches('input, textarea')) {
+                        e.preventDefault();
+                        deleteSelected();
+                    }
+                }
+                
+                if (e.key === 'Escape') {
+                    deselectAll();
+                }
+                
+                // Ctrl+A para selecionar todos
+                if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                    e.preventDefault();
+                    selectAllCharacters();
+                }
+            });
+        }
+
+        function updateSelectionInBox(left, top, width, height, containerRect) {
+            characters.forEach(char => {
+                const marker = document.getElementById(`char-${char.id}`);
+                if (!marker) return;
+                
+                const markerRect = marker.getBoundingClientRect();
+                const markerX = markerRect.left + markerRect.width / 2 - containerRect.left;
+                const markerY = markerRect.top + markerRect.height / 2 - containerRect.top;
+                
+                const inBox = markerX >= left && markerX <= left + width &&
+                              markerY >= top && markerY <= top + height;
+                
+                if (inBox) {
+                    selectCharacter(char.id);
+                }
+            });
+        }
+
+        function selectCharacter(charId) {
+            selectedCharacters.add(charId);
+            const marker = document.getElementById(`char-${charId}`);
+            if (marker) {
+                marker.classList.add('selected');
+            }
+            updateSelectionCount();
+        }
+
+        function deselectCharacter(charId) {
+            selectedCharacters.delete(charId);
+            const marker = document.getElementById(`char-${charId}`);
+            if (marker) {
+                marker.classList.remove('selected');
+            }
+            updateSelectionCount();
+        }
+
+        function toggleCharacterSelection(charId) {
+            if (selectedCharacters.has(charId)) {
+                deselectCharacter(charId);
+            } else {
+                selectCharacter(charId);
+            }
+        }
+
+        function selectAllCharacters() {
+            characters.forEach(char => selectCharacter(char.id));
+        }
+
+        function deselectAll() {
+            selectedCharacters.forEach(charId => {
+                const marker = document.getElementById(`char-${charId}`);
+                if (marker) {
+                    marker.classList.remove('selected');
+                }
+            });
+            selectedCharacters.clear();
+            updateSelectionCount();
+        }
+
+        function moveSelectedCharacters(deltaX, deltaY) {
+            selectedCharacters.forEach(charId => {
+                const char = characters.find(c => c.id === charId);
+                if (char) {
+                    char.x = Math.max(0, Math.min(100, char.x + deltaX));
+                    char.y = Math.max(0, Math.min(100, char.y + deltaY));
+                    
+                    const marker = document.getElementById(`char-${charId}`);
+                    if (marker) {
+                        marker.style.left = `${char.x}%`;
+                        marker.style.top = `${char.y}%`;
+                    }
+                }
+            });
+        }
+
+        function deleteSelected() {
+            if (selectedCharacters.size === 0) return;
+            
+            const count = selectedCharacters.size;
+            if (confirm(`Remover ${count} personagem(ns) selecionado(s)?`)) {
+                selectedCharacters.forEach(charId => {
+                    const marker = document.getElementById(`char-${charId}`);
+                    if (marker) marker.remove();
+                    characters = characters.filter(c => c.id !== charId);
+                });
+                
+                selectedCharacters.clear();
+                updateCharactersList();
+                saveCharactersToStorage();
+                updateSelectionCount();
+            }
+        }
+
+        function updateSelectionCount() {
+            // Pode adicionar um contador visual aqui se quiser
+            const count = selectedCharacters.size;
+            if (count > 0) {
+                console.log(`${count} personagen(s) selecionado(s)`);
+            }
+        }
+
+        // ========== END MULTI-SELECTION SYSTEM ==========
+
+        // ========== MAP SWITCHING SYSTEM ==========
+
+        function switchToMap(mapId) {
+            // Save current map characters before switching
+            saveCurrentMapCharacters();
+            
+            // Clear selection
+            deselectAll();
+            
+            // Update current map
+            currentMap = mapId;
+            
+            // Salvar mapa atual para persistência
+            localStorage.setItem('rpgLastViewedMap', mapId);
+            
+            // Update map image with day/night version
+            const mapImage = document.getElementById('mapImage');
+            mapImage.src = getMapImagePath(mapId);
+            
+            // Update title
+            document.getElementById('currentMapTitle').textContent = mapData[mapId].name;
+            
+            // Show/hide back button
+            const backButton = document.getElementById('backButton');
+            if (mapId === 'general') {
+                backButton.classList.remove('visible');
+            } else {
+                backButton.classList.add('visible');
+            }
+            
+            // Show/hide hotspots
+            const hotspots = document.querySelectorAll('.location-hotspot');
+            hotspots.forEach(hotspot => {
+                hotspot.style.display = mapData[mapId].showHotspots ? 'block' : 'none';
+            });
+            
+            // Update toggle locations button
+            const toggleBtn = document.getElementById('toggleLocationsBtn');
+            if (mapId === 'general') {
+                toggleBtn.style.display = 'block';
+                toggleBtn.textContent = locationsVisible ? '📍 Ocultar Locais' : '📍 Mostrar Locais';
+            } else {
+                toggleBtn.style.display = 'none';
+            }
+            
+            // Clear all character markers from DOM
+            document.querySelectorAll('.character-marker').forEach(marker => marker.remove());
+            
+            // Load characters for this map
+            characters = charactersByMap[mapId] || [];
+            characters.forEach(char => renderCharacter(char));
+            
+            updateCharactersList();
+            
+            // Hide location details panel
+            document.getElementById('defaultMessage').style.display = 'none';
+            document.querySelectorAll('.location-details').forEach(loc => {
+                loc.classList.remove('active');
+            });
+        }
+
+        function switchToGeneralMap() {
+            switchToMap('general');
+        }
+
+        function saveCurrentMapCharacters() {
+            charactersByMap[currentMap] = [...characters];
+            saveAllCharactersToStorage();
+        }
+
+        // ========== END MAP SWITCHING SYSTEM ==========
+
+        function toggleCharacterMode() {
+            const form = document.getElementById('characterForm');
+            const isVisible = form.style.display !== 'none';
+            form.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                document.getElementById('defaultMessage').style.display = 'none';
+                document.querySelectorAll('.location-details').forEach(loc => {
+                    loc.classList.remove('active');
+                });
+            }
+        }
+
+        function startPlacingCharacter() {
+            const name = document.getElementById('charName').value.trim();
+            const type = document.getElementById('charType').value;
+            const icon = document.getElementById('charIcon').value.trim() || getDefaultIcon(type);
+
+            if (!name) {
+                alert('Por favor, insira um nome para o personagem!');
+                return;
+            }
+
+            placingCharacter = { name, type, icon };
+            document.getElementById('mapContainer').classList.add('placing-character');
+            alert('Clique no mapa para posicionar o personagem');
+        }
+
+        function getDefaultIcon(type) {
+            const icons = {
+                player: '🧑',
+                npc: '👤',
+                enemy: '⚔️',
+                mystery: '❓'
+            };
+            return icons[type] || '👤';
+        }
+
+        function placeCharacter(x, y) {
+            if (!placingCharacter) return;
+
+            const character = {
+                id: nextCharId++,
+                ...placingCharacter,
+                x: x,
+                y: y
+            };
+
+            characters.push(character);
+            renderCharacter(character);
+            updateCharactersList();
+            saveCharactersToStorage();
+
+            // Reset
+            placingCharacter = null;
+            document.getElementById('mapContainer').classList.remove('placing-character');
+            document.getElementById('charName').value = '';
+            document.getElementById('charIcon').value = '';
+        }
+
+        function renderCharacter(char) {
+            const mapContainer = document.getElementById('mapContainer');
+            const marker = document.createElement('div');
+            marker.className = `character-marker character-${char.type}`;
+            marker.id = `char-${char.id}`;
+            marker.style.left = `${char.x}%`;
+            marker.style.top = `${char.y}%`;
+            marker.style.transform = 'translate(-50%, -50%)';
+
+            marker.innerHTML = `
+                <div class="character-icon">${char.icon}</div>
+                <div class="character-label">${char.name}</div>
+                <div class="character-remove" onclick="removeCharacter(${char.id}); event.stopPropagation();">✕</div>
+            `;
+
+            mapContainer.appendChild(marker);
+        }
+
+        function removeCharacter(charId) {
+            if (confirm('Remover este personagem do mapa?')) {
+                characters = characters.filter(c => c.id !== charId);
+                const marker = document.getElementById(`char-${charId}`);
+                if (marker) marker.remove();
+                updateCharactersList();
+                saveCharactersToStorage();
+            }
+        }
+
+        function updateCharactersList() {
+            const list = document.getElementById('charactersList');
+            
+            if (characters.length === 0) {
+                list.innerHTML = '<p style="color: #8b7d6b; font-style: italic; text-align: center;">Nenhum personagem adicionado ainda</p>';
+                return;
+            }
+
+            const typeNames = {
+                player: 'Jogador',
+                npc: 'NPC Aliado',
+                enemy: 'Inimigo',
+                mystery: 'Mistério'
+            };
+
+            list.innerHTML = characters.map(char => `
+                <div class="character-item ${char.type}">
+                    <div class="character-info">
+                        <div class="character-name">${char.icon} ${char.name}</div>
+                        <div class="character-type">${typeNames[char.type]}</div>
+                    </div>
+                    <div class="character-actions">
+                        <button class="action-btn" onclick="focusCharacter(${char.id})">📍</button>
+                        <button class="action-btn" onclick="removeCharacter(${char.id})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function focusCharacter(charId) {
+            const marker = document.getElementById(`char-${charId}`);
+            if (marker) {
+                marker.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                marker.style.animation = 'none';
+                setTimeout(() => {
+                    marker.style.animation = 'pulse 0.5s ease 3';
+                }, 10);
+            }
+        }
+
+        function clearAllCharacters() {
+            if (characters.length === 0) return;
+            
+            if (confirm(`Remover todos os ${characters.length} personagens do mapa?`)) {
+                characters.forEach(char => {
+                    const marker = document.getElementById(`char-${char.id}`);
+                    if (marker) marker.remove();
+                });
+                characters = [];
+                updateCharactersList();
+                saveCharactersToStorage();
+            }
+        }
+
+        function toggleLocations() {
+            if (currentMap !== 'general') return;
+            
+            locationsVisible = !locationsVisible;
+            document.querySelectorAll('.location-hotspot').forEach(hotspot => {
+                hotspot.style.display = locationsVisible ? 'block' : 'none';
+            });
+            
+            const toggleBtn = document.getElementById('toggleLocationsBtn');
+            toggleBtn.textContent = locationsVisible ? '📍 Ocultar Locais' : '📍 Mostrar Locais';
+        }
+
+        function showLocation(locationId) {
+            document.querySelectorAll('.location-details').forEach(loc => {
+                loc.classList.remove('active');
+            });
+            
+            document.getElementById('defaultMessage').style.display = 'none';
+            document.getElementById('characterForm').style.display = 'none';
+            
+            const selectedLocation = document.getElementById(locationId);
+            if (selectedLocation) {
+                selectedLocation.classList.add('active');
+            }
+        }
+
+        // LocalStorage
+        function saveAllCharactersToStorage() {
+            // First save current map
+            charactersByMap[currentMap] = [...characters];
+            
+            // Calculate next ID across all maps
+            let maxId = 0;
+            Object.values(charactersByMap).forEach(mapChars => {
+                mapChars.forEach(char => {
+                    if (char.id > maxId) maxId = char.id;
+                });
+            });
+            
+            const saveData = {
+                charactersByMap: charactersByMap,
+                nextCharId: maxId + 1
+            };
+            
+            localStorage.setItem('rpgMapCharactersV2', JSON.stringify(saveData));
+        }
+
+        function loadAllCharactersFromStorage() {
+            const saved = localStorage.getItem('rpgMapCharactersV2');
+            if (saved) {
+                try {
+                    const saveData = JSON.parse(saved);
+                    charactersByMap = saveData.charactersByMap || {
+                        general: [],
+                        montanha: [],
+                        floresta: [],
+                        cidade: [],
+                        caminho: [],
+                        pantano: [],
+                        mansao: []
+                    };
+                    nextCharId = saveData.nextCharId || 1;
+                } catch (e) {
+                    console.error('Error loading characters:', e);
+                }
+            }
+        }
+
+        // Keep for compatibility
+        function saveCharactersToStorage() {
+            saveAllCharactersToStorage();
+        }
+
+        function loadCharactersFromStorage() {
+            loadAllCharactersFromStorage();
+        }
+
+        // ========================================================================
+        // 📁 CONFIGURAÇÃO DE IMAGENS PARA O LIGHTBOX (visualização em tela cheia)
+        // ========================================================================
+        // O lightbox também usa o sistema dia/noite automaticamente
+        // ========================================================================
+        
+        // Lightbox para visualização de mapas
+        const mapLocations = [
+            { id: 'montanha', name: 'Montanha', desc: 'Um pico rochoso envolto em névoa antinatural que parece emanar da própria montanha.' },
+            { id: 'floresta', name: 'Floresta', desc: 'Floresta espessa com vegetação cerrada e antigas cabanas de caçadores abandonadas.' },
+            { id: 'cidade', name: 'Cidade', desc: 'Pequena vila pesqueira dos anos 1920 com construções de madeira desgastadas.' },
+            { id: 'caminho', name: 'Caminho', desc: 'Estrada de terra que conecta a vila à mansão no alto da colina.' },
+            { id: 'pantano', name: 'Pântano', desc: 'Área alagada com pontes de madeira precárias e vegetação aquática.' },
+            { id: 'mansao', name: 'Mansão', desc: 'Grande mansão vitoriana em estado de abandono no topo de uma colina.' }
+        ];
+
+        let currentLightboxIndex = 0;
+
+        // Adicionar evento de clique nas imagens de localização
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.querySelectorAll('.location-image').forEach(img => {
+                    img.addEventListener('click', function() {
+                        const locationId = this.closest('.location-details').id;
+                        openLightbox(locationId);
+                    });
+                });
+            }, 100);
+        });
+
+        function openLightbox(locationId) {
+            const locationIndex = mapLocations.findIndex(loc => loc.id === locationId);
+            if (locationIndex !== -1) {
+                currentLightboxIndex = locationIndex;
+                showLightboxContent();
+                document.getElementById('lightbox').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function showLightboxContent() {
+            const location = mapLocations[currentLightboxIndex];
+            document.getElementById('lightboxTitle').textContent = location.name;
+            document.getElementById('lightboxImage').src = getMapImagePath(location.id);
+            document.getElementById('lightboxImage').alt = location.name;
+            document.getElementById('lightboxInfo').textContent = location.desc;
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function navigateLightbox(direction) {
+            currentLightboxIndex += direction;
+            
+            if (currentLightboxIndex < 0) {
+                currentLightboxIndex = mapLocations.length - 1;
+            } else if (currentLightboxIndex >= mapLocations.length) {
+                currentLightboxIndex = 0;
+            }
+            
+            showLightboxContent();
+        }
+
+        // Fechar lightbox com ESC
+        document.addEventListener('keydown', (e) => {
+            const lightbox = document.getElementById('lightbox');
+            if (lightbox.classList.contains('active')) {
+                if (e.key === 'Escape') {
+                    closeLightbox();
+                } else if (e.key === 'ArrowLeft') {
+                    navigateLightbox(-1);
+                } else if (e.key === 'ArrowRight') {
+                    navigateLightbox(1);
+                }
+            }
+        });
+
+        // Fechar lightbox clicando fora da imagem
+        document.getElementById('lightbox').addEventListener('click', (e) => {
+            if (e.target.id === 'lightbox') {
+                closeLightbox();
+            }
+        });
+    </script>
+</body>
+</html>
