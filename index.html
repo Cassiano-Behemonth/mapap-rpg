@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa da Ilha - RPG 1920s</title>
+    <title>Mapa da Ilha - RPG 1920s (Sistema de Andares)</title>
     <style>
         * {
             margin: 0;
@@ -40,7 +40,7 @@
             font-weight: bold;
         }
 
-        /* Toggle Switch Dia/Noite - Simples */
+        /* Toggle Switch Dia/Noite */
         .day-night-switch {
             position: absolute;
             top: 10px;
@@ -112,10 +112,6 @@
             transition: all 0.3s ease;
         }
 
-        .map-container.panel-open {
-            grid-template-columns: 2fr 1fr;
-        }
-
         .main-map {
             position: relative;
             background: #2a2520;
@@ -156,6 +152,118 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.4);
         }
+
+        /* Breadcrumb navigation */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: rgba(26, 22, 18, 0.7);
+            border-radius: 6px;
+            border: 1px solid #3d3426;
+            font-size: 0.95em;
+            color: #8b7d6b;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .breadcrumb-link {
+            color: #d4c5a9;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .breadcrumb-link:hover {
+            color: #ffd700;
+            background: rgba(61, 52, 38, 0.5);
+        }
+
+        .breadcrumb-separator {
+            color: #5d4a3a;
+            font-weight: bold;
+        }
+
+        .breadcrumb-current {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        /* Floor Selector System */
+        .floor-selector {
+            position: absolute;
+            top: 60px;
+            right: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 50;
+        }
+
+        .floor-selector.visible {
+            display: flex;
+        }
+
+        .floor-button {
+            width: 50px;
+            height: 50px;
+            background: rgba(42, 37, 32, 0.95);
+            border: 2px solid #3d3426;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .floor-button:hover {
+            background: rgba(61, 52, 38, 0.95);
+            border-color: #ffd700;
+            transform: translateX(-5px) scale(1.08);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .floor-button.active {
+            background: rgba(61, 52, 38, 1);
+            border-color: #ffd700;
+            border-width: 3px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .floor-label {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #8b7d6b;
+            letter-spacing: 1px;
+        }
+
+        .floor-button.active .floor-label {
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .floor-icon {
+            display: none;
+        }
+
+        .floor-name {
+            display: none;
+        }
+
+        /* Floor indicator badge */
 
         .current-map-title {
             flex: 1;
@@ -234,6 +342,46 @@
             border: 2px solid #fff;
             border-radius: 50%;
             box-shadow: 0 0 20px rgba(255,200,100,0.8);
+        }
+
+        /* Hotspot Secreto - Pequeno e Discreto */
+        .hotspot-marker.secret {
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle, rgba(80,80,90,0.4), rgba(50,50,60,0.3));
+            border: 1px solid rgba(100,100,110,0.5);
+            box-shadow: 0 0 8px rgba(80,80,90,0.3);
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+
+        .hotspot-marker.secret:hover {
+            width: 20px;
+            height: 20px;
+            opacity: 1;
+            background: radial-gradient(circle, rgba(150,140,120,0.7), rgba(100,90,80,0.5));
+            border: 2px solid rgba(200,180,150,0.8);
+            box-shadow: 0 0 15px rgba(150,140,120,0.6);
+        }
+
+        /* Hotspot Semi-Escondido - Meio-termo entre normal e secreto */
+        .hotspot-marker.hidden {
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(180,160,120,0.5), rgba(140,120,90,0.4));
+            border: 1px solid rgba(160,140,100,0.6);
+            box-shadow: 0 0 12px rgba(180,160,120,0.4);
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .hotspot-marker.hidden:hover {
+            width: 28px;
+            height: 28px;
+            opacity: 1;
+            background: radial-gradient(circle, rgba(220,190,140,0.8), rgba(180,150,110,0.6));
+            border: 2px solid rgba(220,190,140,0.9);
+            box-shadow: 0 0 18px rgba(220,190,140,0.7);
         }
 
         /* Marcadores de Personagens */
@@ -405,21 +553,6 @@
             box-shadow: 0 4px 12px rgba(196, 30, 58, 0.5);
         }
 
-        .right-click-hint {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: rgba(42, 37, 32, 0.95);
-            color: #d4c5a9;
-            padding: 15px 25px;
-            border-radius: 8px;
-            border: 2px solid #3d3426;
-            font-size: 0.95em;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-            z-index: 1000;
-            pointer-events: none;
-        }
-
         .location-info h2 {
             color: #d4c5a9;
             border-bottom: 2px solid #3d3426;
@@ -529,81 +662,11 @@
             background: #4d4436;
         }
 
-        .location-details {
-            display: none;
-        }
-
-        .location-details.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .location-image {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            border: 2px solid #3d3426;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-
-        .location-description {
-            line-height: 1.6;
-            color: #b8a989;
-            margin-bottom: 15px;
-        }
-
-        .location-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 15px;
-        }
-
-        .tag {
-            background: #3d3426;
-            color: #d4c5a9;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.85em;
-            border: 1px solid #4d4436;
-        }
-
         .default-message {
             text-align: center;
             padding: 40px 20px;
             color: #8b7d6b;
             font-style: italic;
-        }
-
-        .navigation-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .nav-btn {
-            flex: 1;
-            padding: 10px;
-            background: #3d3426;
-            color: #d4c5a9;
-            border: 2px solid #4d4436;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Georgia', serif;
-        }
-
-        .nav-btn:hover {
-            background: #4d4436;
-            border-color: #5d5446;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
         }
 
         .tooltip {
@@ -619,117 +682,6 @@
             z-index: 1000;
             border: 1px solid #3d3426;
             white-space: nowrap;
-        }
-
-        /* Lightbox para visualização de mapas */
-        .lightbox {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .lightbox.active {
-            display: flex;
-        }
-
-        .lightbox-content {
-            position: relative;
-            max-width: 95%;
-            max-height: 95vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .lightbox-image {
-            max-width: 100%;
-            max-height: 85vh;
-            object-fit: contain;
-            border: 3px solid #3d3426;
-            border-radius: 8px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-        }
-
-        .lightbox-title {
-            color: #d4c5a9;
-            font-size: 1.5em;
-            margin-bottom: 15px;
-            text-align: center;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        }
-
-        .lightbox-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            background: rgba(61, 52, 38, 0.9);
-            color: #d4c5a9;
-            border: 2px solid #4d4436;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.5em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            z-index: 10000;
-        }
-
-        .lightbox-close:hover {
-            background: #4d4436;
-            transform: scale(1.1);
-        }
-
-        .lightbox-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 50px;
-            height: 50px;
-            background: rgba(61, 52, 38, 0.9);
-            color: #d4c5a9;
-            border: 2px solid #4d4436;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.5em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .lightbox-nav:hover {
-            background: #4d4436;
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        .lightbox-prev {
-            left: 20px;
-        }
-
-        .lightbox-next {
-            right: 20px;
-        }
-
-        .lightbox-info {
-            background: rgba(26, 22, 18, 0.95);
-            padding: 15px 25px;
-            border-radius: 8px;
-            border: 2px solid #3d3426;
-            margin-top: 15px;
-            text-align: center;
-            color: #b8a989;
-            max-width: 600px;
         }
 
         /* Selection Box */
@@ -750,14 +702,293 @@
             cursor: crosshair;
         }
 
-        .location-image {
-            cursor: zoom-in;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .location-image:hover {
-            opacity: 0.9;
-            transform: scale(1.02);
-            transition: all 0.3s ease;
+        /* Fog of War System */
+        .fog-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 15;
+            display: none;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            overflow: hidden;
+        }
+
+        .fog-layer.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Nuvens de névoa 1 - Movimento esquerda para direita */
+        .fog-overlay {
+            position: absolute;
+            inset: -100px;
+            background: 
+                radial-gradient(ellipse 600px 400px at 20% 30%, rgba(200, 200, 220, 0.35), transparent 50%),
+                radial-gradient(ellipse 500px 350px at 50% 50%, rgba(210, 210, 230, 0.3), transparent 50%),
+                radial-gradient(ellipse 550px 380px at 80% 70%, rgba(205, 205, 225, 0.33), transparent 50%);
+            animation: fogDriftRight 30s linear infinite;
+            filter: blur(40px);
+        }
+
+        @keyframes fogDriftRight {
+            0% { 
+                transform: translateX(-100%);
+            }
+            100% { 
+                transform: translateX(100%);
+            }
+        }
+
+        /* Nuvens de névoa 2 - Movimento mais lento da esquerda para direita */
+        .fog-veil {
+            position: absolute;
+            inset: -100px;
+            background: 
+                radial-gradient(ellipse 550px 370px at 30% 40%, rgba(190, 190, 210, 0.3), transparent 50%),
+                radial-gradient(ellipse 480px 340px at 60% 60%, rgba(185, 185, 205, 0.28), transparent 50%),
+                radial-gradient(ellipse 520px 360px at 90% 20%, rgba(195, 195, 215, 0.32), transparent 50%);
+            animation: fogDriftRight 45s linear infinite;
+            filter: blur(50px);
+            animation-delay: -15s;
+        }
+
+        /* Nuvens de névoa 3 - Movimento direita para esquerda (contrário) */
+        .fog-dense-layer {
+            position: absolute;
+            inset: -100px;
+            background: 
+                radial-gradient(ellipse 580px 390px at 40% 25%, rgba(180, 180, 200, 0.28), transparent 50%),
+                radial-gradient(ellipse 490px 330px at 70% 75%, rgba(175, 175, 195, 0.25), transparent 50%);
+            animation: fogDriftLeft 40s linear infinite;
+            filter: blur(45px);
+            animation-delay: -10s;
+        }
+
+        @keyframes fogDriftLeft {
+            0% { 
+                transform: translateX(100%);
+            }
+            100% { 
+                transform: translateX(-100%);
+            }
+        }
+
+        /* Nuvens FLUTUANTES (ficam no lugar) - Camada 4 */
+        .fog-float-layer {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse 650px 420px at 15% 20%, rgba(220, 220, 240, 0.4), transparent 50%),
+                radial-gradient(ellipse 580px 390px at 85% 80%, rgba(210, 210, 230, 0.42), transparent 50%),
+                radial-gradient(ellipse 620px 400px at 45% 55%, rgba(215, 215, 235, 0.38), transparent 50%);
+            animation: fogFloatInPlace1 20s ease-in-out infinite;
+            filter: blur(55px);
+        }
+
+        @keyframes fogFloatInPlace1 {
+            0%, 100% { 
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            33% { 
+                transform: translate(40px, -30px) scale(1.08);
+                opacity: 0.85;
+            }
+            66% { 
+                transform: translate(-35px, 35px) scale(0.92);
+                opacity: 0.9;
+            }
+        }
+
+        /* Nuvens FLUTUANTES 2 - Camada 5 */
+        .fog-ambient-layer {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse 700px 450px at 50% 30%, rgba(200, 200, 220, 0.38), transparent 50%),
+                radial-gradient(ellipse 600px 380px at 25% 70%, rgba(190, 190, 210, 0.4), transparent 50%),
+                radial-gradient(ellipse 550px 360px at 75% 45%, rgba(195, 195, 215, 0.36), transparent 50%);
+            animation: fogFloatInPlace2 28s ease-in-out infinite;
+            filter: blur(60px);
+            animation-delay: -7s;
+        }
+
+        @keyframes fogFloatInPlace2 {
+            0%, 100% { 
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 1;
+            }
+            50% { 
+                transform: translate(-45px, 40px) rotate(5deg);
+                opacity: 0.8;
+            }
+        }
+
+        /* Névoa de fundo pulsante - Camada 6 */
+        .fog-pulse-layer {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(
+                    ellipse at center,
+                    transparent 0%,
+                    transparent 20%,
+                    rgba(180, 180, 200, 0.2) 50%,
+                    rgba(160, 160, 180, 0.3) 100%
+                );
+            animation: fogPulse 12s ease-in-out infinite;
+            filter: blur(35px);
+        }
+
+        @keyframes fogPulse {
+            0%, 100% { 
+                opacity: 0.9;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 1;
+                transform: scale(1.12);
+            }
+        }
+
+        /* Partículas brilhantes - Movimento diagonal */
+        .fog-particles {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                radial-gradient(circle 2px at 15% 25%, rgba(255, 255, 255, 0.5), transparent),
+                radial-gradient(circle 1px at 45% 35%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(circle 2px at 75% 15%, rgba(255, 255, 255, 0.4), transparent),
+                radial-gradient(circle 1px at 25% 65%, rgba(255, 255, 255, 0.35), transparent),
+                radial-gradient(circle 2px at 85% 55%, rgba(255, 255, 255, 0.4), transparent),
+                radial-gradient(circle 1px at 55% 75%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(circle 2px at 10% 85%, rgba(255, 255, 255, 0.5), transparent),
+                radial-gradient(circle 1px at 90% 85%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(circle 2px at 40% 50%, rgba(255, 255, 255, 0.4), transparent),
+                radial-gradient(circle 1px at 70% 30%, rgba(255, 255, 255, 0.35), transparent);
+            background-size: 200% 200%;
+            animation: fogParticlesDrift 25s linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes fogParticlesDrift {
+            0% { 
+                background-position: 0% 50%;
+            }
+            100% { 
+                background-position: 100% 50%;
+            }
+        }
+
+        /* Fog Control Button */
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 215, 0, 0.95);
+            color: #1a1612;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            z-index: 10000;
+            display: none;
+            animation: pulse 2s infinite;
+        }
+
+        .placing-mode-indicator.active {
+            display: block;
+        }
+
+        /* Inline Name Input */
+        .inline-name-input {
+            position: absolute;
+            display: none;
+            z-index: 1000;
+        }
+
+        .inline-name-input.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .inline-name-box {
+            background: rgba(26, 22, 18, 0.98);
+            border: 3px solid #ffd700;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+            min-width: 250px;
+        }
+
+        .inline-name-label {
+            color: #ffd700;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .inline-name-field {
+            width: 100%;
+            padding: 10px;
+            background: #1a1612;
+            border: 2px solid #3d3426;
+            border-radius: 4px;
+            color: #d4c5a9;
+            font-family: 'Georgia', serif;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        .inline-name-field:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+        }
+
+        .inline-name-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .inline-name-btn {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .inline-name-btn-ok {
+            background: #4d4436;
+            color: #ffd700;
+            border-color: #5d5446;
+        }
+
+        .inline-name-btn-ok:hover {
+            background: #5d5446;
+        }
+
+        .inline-name-btn-cancel {
+            background: #3d3426;
+            color: #b8a989;
+            border-color: #4d4436;
+        }
+
+        .inline-name-btn-cancel:hover {
+            background: #4d4436;
         }
 
         @media (max-width: 1200px) {
@@ -771,29 +1002,40 @@
     <div class="container">
         <header>
             <h1>ILHA ESPIRAL</h1>
+            <p class="subtitle">Sistema de Navegação por Andares</p>
         </header>
 
         <div class="map-container">
             <div class="main-map">
+                <!-- Breadcrumb Navigation -->
+                <div class="breadcrumb" id="breadcrumb">
+                    <div class="breadcrumb-item">
+                        <span class="breadcrumb-link" onclick="navigateToBreadcrumb(0)">🏝️ Ilha</span>
+                    </div>
+                </div>
+
                 <div class="map-controls">
-                    <button class="back-button" id="backButton" onclick="switchToGeneralMap()">
-                        ← Voltar ao Mapa Geral
+                    <button class="back-button" id="backButton" onclick="goBackOneLevel()">
+                        ← Voltar
                     </button>
                     <div class="current-map-title" id="currentMapTitle">Mapa Geral da Ilha</div>
                 </div>
                 
                 <div class="map-controls">
-                    <button class="control-btn" onclick="toggleCharacterMode()">
+                    <button class="control-btn" onclick="quickAddCharacter()">
                         ➕ Adicionar Personagem
                     </button>
                     <button class="control-btn" onclick="toggleLocations()" id="toggleLocationsBtn">
                         📍 Ocultar Locais
                     </button>
-                    <button class="control-btn" onclick="selectAllCharacters()">
-                        ☑️ Selecionar Todos
+                    <button class="control-btn" onclick="copySelectedCharacters()" id="copyBtn">
+                        📋 Copiar Selecionados
+                    </button>
+                    <button class="control-btn" onclick="pasteCharacters()" id="pasteBtn" disabled>
+                        📄 Colar Personagens
                     </button>
                     <button class="control-btn" onclick="deselectAll()">
-                        ☐ Deselecionar
+                        ☐ Deselecionar Todos
                     </button>
                     <button class="control-btn" onclick="deleteSelected()">
                         🗑️ Remover Selecionados
@@ -801,831 +1043,865 @@
                 </div>
                 
                 <div style="margin-bottom: 15px; padding: 8px; background: rgba(26, 22, 18, 0.5); border-radius: 4px; border: 1px solid #3d3426; font-size: 0.85em; color: #8b7d6b; text-align: center;">
-                    💡 Arraste para selecionar | Ctrl+Click para múltiplos | Delete para remover
+                    ⌨️ <strong style="color: #ffd700;">1</strong>=Mansão | <strong style="color: #ffd700;">2</strong>=Cidade | <strong style="color: #ffd700;">3</strong>=Caminho | <strong style="color: #ffd700;">4</strong>=Pântano | <strong style="color: #ffd700;">5</strong>=Montanha | <strong style="color: #ffd700;">6</strong>=Floresta | <strong style="color: #ffd700;">0</strong>=Mapa Geral | <strong style="color: #ffd700;">F</strong>=Névoa
                 </div>
 
                 <div class="map-image-container" id="mapContainer">
                     <div class="selection-box" id="selectionBox"></div>
                     
-                    <!-- Switch Dia/Noite Simples -->
+                    <!-- Switch Dia/Noite -->
                     <div class="day-night-switch">
                         <label>Noite</label>
                         <input type="checkbox" id="dayNightToggle" onchange="toggleDayNight()">
                         <label>Dia</label>
                     </div>
                     
-                    <!-- 
-                    ========================================================================
-                    📁 IMAGEM DO MAPA PRINCIPAL
-                    ========================================================================
-                    COLOQUE O ARQUIVO "Mapa_Geral.png" NA MESMA PASTA DESTE HTML
+                    <!-- Floor Selector -->
+                    <div class="floor-selector" id="floorSelector"></div>
                     
-                    Se quiser usar outro caminho, modifique o src abaixo:
-                    Por exemplo: src="imagens/Mapa_Geral.png" ou src="./mapas/Mapa_Geral.png"
-                    ========================================================================
-                    -->
-                    <img src="Mapa_Geral.png" alt="Mapa Geral da Ilha" class="map-image" id="mapImage" 
-                         onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%221000%22><rect fill=%22%231a1612%22 width=%22800%22 height=%221000%22/><text x=%2250%25%22 y=%2250%25%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%23d4c5a9%22 text-anchor=%22middle%22>Mapa não carregado - Clique com botão direito e %22Abrir imagem em nova aba%22</text></svg>'">
-                    
-                    <!-- Hotspots de Localização -->
-                    <div class="hotspot location-hotspot" style="top: 12%; left: 25%;" data-location="mansao" title="Mansão">
-                        <div class="hotspot-marker"></div>
+                    <!-- Inline Name Input -->
+                    <div class="inline-name-input" id="inlineNameInput">
+                        <div class="inline-name-box">
+                            <label class="inline-name-label">Nome do Personagem:</label>
+                            <input type="text" class="inline-name-field" id="inlineNameField" placeholder="Digite o nome..." maxlength="50">
+                            <div class="inline-name-buttons">
+                                <button class="inline-name-btn inline-name-btn-ok" onclick="confirmInlineName()">✓ OK</button>
+                                <button class="inline-name-btn inline-name-btn-cancel" onclick="cancelInlineName()">✕ Cancelar</button>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="hotspot location-hotspot" style="top: 25%; right: 20%;" data-location="montanha" title="Montanha">
-                        <div class="hotspot-marker"></div>
+                    <img src="Mapa_Geral.png" alt="Mapa Geral da Ilha" class="map-image" id="mapImage">
+                    
+                    <!-- Fog of War Layer - 7 Camadas! -->
+                    <div class="fog-layer" id="fogLayer">
+                        <div class="fog-pulse-layer"></div>
+                        <div class="fog-veil"></div>
+                        <div class="fog-overlay"></div>
+                        <div class="fog-dense-layer"></div>
+                        <div class="fog-float-layer"></div>
+                        <div class="fog-ambient-layer"></div>
+                        <div class="fog-particles"></div>
                     </div>
                     
-                    <div class="hotspot location-hotspot" style="top: 45%; right: 20%;" data-location="floresta" title="Floresta">
-                        <div class="hotspot-marker"></div>
-                    </div>
-                    
-                    <div class="hotspot location-hotspot" style="top: 75%; right: 25%;" data-location="cidade" title="Cidade">
-                        <div class="hotspot-marker"></div>
-                    </div>
-                    
-                    <div class="hotspot location-hotspot" style="top: 55%; left: 60%;" data-location="caminho" title="Caminho">
-                        <div class="hotspot-marker"></div>
-                    </div>
-                    
-                    <div class="hotspot location-hotspot" style="top: 50%; left: 15%;" data-location="pantano" title="Pântano">
-                        <div class="hotspot-marker"></div>
-                    </div>
-                    
-                    <!-- Personagens serão adicionados aqui dinamicamente -->
+                    <!-- Hotspots serão adicionados dinamicamente -->
                 </div>
             </div>
 
-            <div class="location-info" id="controlPanel">
-                <button class="panel-close-btn" onclick="closeControlPanel()" title="Fechar Painel (ESC)">✕</button>
-                <h2>Painel de Controle</h2>
-                
-                <!-- Formulário de Personagem -->
-                <div class="character-form" id="characterForm" style="display: none;">
-                    <h3 style="margin-bottom: 15px; color: #d4c5a9;">Novo Personagem</h3>
-                    <div class="form-group">
-                        <label>Nome:</label>
-                        <input type="text" id="charName" placeholder="Ex: Detective Morgan">
-                    </div>
-                    <div class="form-group">
-                        <label>Tipo:</label>
-                        <select id="charType">
-                            <option value="player">🧑 Jogador (Azul)</option>
-                            <option value="npc">👤 NPC Aliado (Verde)</option>
-                            <option value="enemy">⚔️ Inimigo (Vermelho)</option>
-                            <option value="mystery">❓ Mistério (Roxo)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Ícone (emoji):</label>
-                        <input type="text" id="charIcon" placeholder="Ex: 🕵️" maxlength="2">
-                    </div>
-                    <button class="add-character-btn" onclick="startPlacingCharacter()">
-                        📍 Clique no mapa para posicionar
-                    </button>
-                </div>
-
-                <!-- Lista de Personagens -->
-                <div class="characters-list">
-                    <h3 style="margin-bottom: 10px; color: #d4c5a9;">Personagens no Mapa Atual</h3>
-                    <p style="font-size: 0.85em; color: #8b7d6b; margin-bottom: 15px; font-style: italic;">
-                        Cada mapa tem seus próprios personagens
-                    </p>
-                    <div id="charactersList">
-                        <p style="color: #8b7d6b; font-style: italic; text-align: center;">
-                            Nenhum personagem adicionado ainda
-                        </p>
-                    </div>
-                </div>
-
-                <div class="default-message" id="defaultMessage">
-                    <p>📍 Clique em um ponto luminoso no mapa para ver os detalhes da localização.</p>
-                </div>
-
-                <!-- 
-                ========================================================================
-                📁 IMAGENS NOS PAINÉIS DE DETALHES
-                ========================================================================
-                Estas imagens aparecem no painel lateral quando você clica em uma localização
-                São as MESMAS imagens dos mapas - se mudou o caminho acima, mude aqui também!
-                
-                Exemplo: se suas imagens estão em "imagens/montanha.png"
-                Troque: src="montanha.png" por src="imagens/montanha.png"
-                ========================================================================
-                -->
-
-                <!-- Detalhes das Localizações -->
-                <div class="location-details" id="montanha">
-                    <img src="" alt="Montanha" class="location-image" data-map-id="montanha">
-                    <h3>Montanha</h3>
-                    <p class="location-description">
-                        Um pico rochoso envolto em névoa antinatural que parece emanar da própria montanha. 
-                        Árvores mortas cercam um caminho íngreme que leva a uma entrada misteriosa no topo.
-                    </p>
-                    <div class="location-tags">
-                        <span class="tag">🌫️ Névoa Sobrenatural</span>
-                        <span class="tag">⚠️ Perigo Alto</span>
-                    </div>
-                </div>
-
-                <div class="location-details" id="floresta">
-                    <img src="" alt="Floresta" class="location-image" data-map-id="floresta">
-                    <h3>Floresta</h3>
-                    <p class="location-description">
-                        Floresta espessa com vegetação cerrada e antigas cabanas de caçadores abandonadas.
-                    </p>
-                    <div class="location-tags">
-                        <span class="tag">🌳 Vegetação Densa</span>
-                        <span class="tag">🏚️ Estruturas Antigas</span>
-                    </div>
-                </div>
-
-                <div class="location-details" id="cidade">
-                    <img src="" alt="Cidade" class="location-image" data-map-id="cidade">
-                    <h3>Cidade</h3>
-                    <p class="location-description">
-                        Pequena vila pesqueira dos anos 1920 com construções de madeira desgastadas.
-                    </p>
-                    <div class="location-tags">
-                        <span class="tag">⚓ Porto Ativo</span>
-                        <span class="tag">👥 População Local</span>
-                    </div>
-                </div>
-
-                <div class="location-details" id="caminho">
-                    <img src="" alt="Caminho" class="location-image" data-map-id="caminho">
-                    <h3>Caminho</h3>
-                    <p class="location-description">
-                        Estrada de terra que conecta a vila à mansão no alto da colina.
-                    </p>
-                    <div class="location-tags">
-                        <span class="tag">🌉 Ponte</span>
-                        <span class="tag">🛤️ Rota Principal</span>
-                    </div>
-                </div>
-
-                <div class="location-details" id="pantano">
-                    <img src="" alt="Pântano" class="location-image" data-map-id="pantano">
-                    <h3>Pântano</h3>
-                    <p class="location-description">
-                        Área alagada com pontes de madeira precárias e vegetação aquática.
-                    </p>
-                    <div class="location-tags">
-                        <span class="tag">💧 Terreno Alagado</span>
-                        <span class="tag">⚠️ Terreno Instável</span>
-                    </div>
-                </div>
-
-                <div class="location-details" id="mansao">
-                    <img src="" alt="Mansão" class="location-image" data-map-id="mansao">
-                    <h3>Mansão</h3>
-                    <p class="location-description">
-                        Grande mansão vitoriana em estado de abandono no topo de uma colina.
-                    </p>
-                    <div class="location-tags">
-                        <span class="tag">🕯️ Iluminação Fraca</span>
-                        <span class="tag">👻 Atividade Paranormal</span>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
     <div class="tooltip" id="tooltip"></div>
 
-    <!-- Lightbox para visualização de mapas -->
-    <div class="lightbox" id="lightbox">
-        <button class="lightbox-close" onclick="closeLightbox()">✕</button>
-        <button class="lightbox-nav lightbox-prev" onclick="navigateLightbox(-1)">‹</button>
-        <button class="lightbox-nav lightbox-next" onclick="navigateLightbox(1)">›</button>
-        
-        <div class="lightbox-content">
-            <h2 class="lightbox-title" id="lightboxTitle"></h2>
-            <img src="" alt="" class="lightbox-image" id="lightboxImage">
-            <div class="lightbox-info" id="lightboxInfo"></div>
-        </div>
-    </div>
-
     <script>
-        // Estado da aplicação
+        // ========================================================================
+        // CONFIGURAÇÃO DA ESTRUTURA DE MAPAS E ANDARES
+        // ========================================================================
+        
+        const mapHierarchy = {
+            general: {
+                id: 'general',
+                name: 'Mapa Geral da Ilha',
+                imgBase: 'Mapa_Geral',
+                imgExt: '.png',
+                icon: '🏝️',
+                hotspots: [
+                    { id: 'mansao', title: 'Mansão', position: { top: '18%', left: '25%' } },
+                    { id: 'montanha', title: 'Montanha', position: { top: '25%', right: '20%' } },
+                    { id: 'floresta', title: 'Floresta', position: { top: '45%', right: '20%' } },
+                    { id: 'cidade', title: 'Cidade', position: { top: '75%', right: '25%' } },
+                    { id: 'caminho', title: 'Caminho', position: { top: '55%', left: '60%' } },
+                    { id: 'pantano', title: 'Pântano', position: { top: '50%', left: '15%' } }
+                ]
+            },
+            
+            // ============ MANSÃO - 2 ANDARES ============
+            mansao: {
+                id: 'mansao',
+                name: 'Mansão',
+                imgBase: 'Mansao',
+                imgExt: '.png',
+                icon: '🏚️',
+                description: 'Uma mansão abandonada dos anos 1920.',
+                redirectTo: 'mansao_terreo',
+                hasFloors: true,
+                floors: [
+                    { 
+                        id: 'mansao_porao', 
+                        label: 'B1',
+                        name: 'Porão', 
+                        icon: '⚗️',
+                        order: -1
+                    },
+                    { 
+                        id: 'mansao_terreo', 
+                        label: 'F1',
+                        name: 'Térreo', 
+                        icon: '🚪',
+                        order: 0
+                    }
+                ]
+            },
+            
+            mansao_terreo: {
+                id: 'mansao_terreo',
+                name: 'Mansão - Térreo (F1)',
+                imgBase: 'Mansao',
+                imgExt: '.png',
+                icon: '🚪',
+                description: 'O hall principal da mansão.',
+                parentFloorSystem: 'mansao',
+                hotspots: [
+                    { id: 'mansao_porao', title: 'Alçapão Secreto', position: { top: '60%', left: '49%' }, isHidden: true }
+                ]
+            },
+            
+            mansao_porao: {
+                id: 'mansao_porao',
+                name: 'Mansão - Porão (B1)',
+                imgBase: 'Mansao_subsolo_1',
+                imgExt: '.png',
+                hasDayNight: false,
+                icon: '⚗️',
+                description: 'Laboratório secreto no porão.',
+                parentFloorSystem: 'mansao',
+                hotspots: [
+                    { id: 'mansao_terreo', title: 'Voltar ao Térreo', position: { top: '56%', left: '49%' }, isHidden: true }
+                ]
+            },
+            
+            // ============ MONTANHA - 5 NÍVEIS (1 Base + 4 Subsolos) ============
+            montanha: {
+                id: 'montanha',
+                name: 'Montanha',
+                imgBase: 'montanha',
+                imgExt: '.png',
+                icon: '⛰️',
+                description: 'Pico rochoso com entrada para cavernas.',
+                redirectTo: 'montanha_base',
+                hasFloors: true,
+                floors: [
+                    { 
+                        id: 'montanha_base', 
+                        label: 'F1',
+                        name: 'Base/Entrada', 
+                        icon: '🏕️',
+                        order: 0
+                    },
+                    { 
+                        id: 'montanha_subsolo1', 
+                        label: 'B1',
+                        name: 'Caverna Nível 1', 
+                        icon: '🕳️',
+                        order: -1
+                    },
+                    { 
+                        id: 'montanha_subsolo2', 
+                        label: 'B2',
+                        name: 'Caverna Nível 2', 
+                        icon: '⛏️',
+                        order: -2
+                    },
+                    { 
+                        id: 'montanha_subsolo3', 
+                        label: 'B3',
+                        name: 'Caverna Nível 3', 
+                        icon: '🔦',
+                        order: -3
+                    },
+                    { 
+                        id: 'montanha_subsolo4', 
+                        label: 'B4',
+                        name: 'Caverna Nível 4', 
+                        icon: '💀',
+                        order: -4
+                    }
+                ]
+            },
+            
+            montanha_base: {
+                id: 'montanha_base',
+                name: 'Montanha - Base (F1)',
+                imgBase: 'montanha',
+                imgExt: '.png',
+                icon: '🏕️',
+                description: 'Entrada da montanha.',
+                parentFloorSystem: 'montanha',
+                hotspots: [
+                    { id: 'montanha_subsolo1', title: 'Entrada da Caverna', position: { top: '42%', left: '50%' } }
+                ]
+            },
+            
+            montanha_subsolo1: {
+                id: 'montanha_subsolo1',
+                name: 'Montanha - Caverna B1',
+                imgBase: 'montanha_subsolo_1',
+                imgExt: '.png',
+                hasDayNight: false,
+                icon: '🕳️',
+                description: 'Primeiro nível das cavernas.',
+                parentFloorSystem: 'montanha',
+                hotspots: [
+                    { id: 'montanha_base', title: 'Voltar à Superfície', position: { top: '15%', left: '50%' } },
+                    { id: 'montanha_subsolo2', title: 'Descer para B2', position: { bottom: '12%', left: '17%' }, isHidden: true }
+                ]
+            },
+            
+            montanha_subsolo2: {
+                id: 'montanha_subsolo2',
+                name: 'Montanha - Caverna B2',
+                imgBase: 'montanha_subsolo_2',
+                imgExt: '.png',
+                hasDayNight: false,
+                icon: '⛏️',
+                description: 'Segundo nível das cavernas.',
+                parentFloorSystem: 'montanha',
+                hotspots: [
+                    { id: 'montanha_subsolo1', title: 'Porta de Ferro - Voltar B1', position: { top: '49%', right: '13%' } },
+                    { id: 'montanha_subsolo3', title: 'Espiral Mística - Descer B3', position: { top: '18%', left: '50%' }, isHidden: true }
+                ]
+            },
+            
+            montanha_subsolo3: {
+                id: 'montanha_subsolo3',
+                name: 'Montanha - Caverna B3',
+                imgBase: 'montanha_subsolo_3',
+                imgExt: '.png',
+                hasDayNight: false,
+                icon: '🔦',
+                description: 'Terceiro nível - passagem secreta para o pântano.',
+                parentFloorSystem: 'montanha',
+                hotspots: [
+                    { id: 'montanha_subsolo2', title: 'Porta Superior - Voltar B2', position: { top: '14%', left: '50%' } },
+                    { id: 'montanha_subsolo4', title: 'Porta Inferior - Descer B4', position: { bottom: '14%', left: '50%' } },
+                    { id: 'caminho_secreto_pantano', title: 'Passagem Secreta', position: { top: '50%', right: '10%' }, isSecret: true }
+                ]
+            },
+            
+            montanha_subsolo4: {
+                id: 'montanha_subsolo4',
+                name: 'Montanha - Caverna B4',
+                imgBase: 'montanha_subsolo_4',
+                imgExt: '.png',
+                hasDayNight: false,
+                icon: '💀',
+                description: 'Nível mais profundo da caverna.',
+                parentFloorSystem: 'montanha',
+                hotspots: [
+                    { id: 'montanha_subsolo3', title: 'Porta - Voltar B3', position: { top: '19%', left: '77%' } }
+                ]
+            },
+            
+            // ============ CAMINHO SECRETO ============
+            caminho_secreto_pantano: {
+                id: 'caminho_secreto_pantano',
+                name: 'Passagem Secreta',
+                imgBase: 'caminho_montanha_pantano',
+                imgExt: '.png',
+                hasDayNight: false,
+                icon: '🚪',
+                description: 'Túnel secreto que conecta a caverna ao pântano.',
+                hotspots: [
+                    { id: 'montanha_subsolo3', title: 'Voltar à Caverna B3', position: { top: '50%', left: '50%' } },
+                    { id: 'pantano', title: 'Saída para o Pântano', position: { bottom: '12%', left: '8%' } }
+                ]
+            },
+            
+            // ============ MAPAS SIMPLES (SEM ANDARES) ============
+            caminho: {
+                id: 'caminho',
+                name: 'Caminho',
+                imgBase: 'Caminho_Mansao_Cidade',
+                imgExt: '.png',
+                icon: '🛤️',
+                description: 'Estrada de terra que conecta a mansão à cidade.'
+            },
+            
+            pantano: {
+                id: 'pantano',
+                name: 'Pântano',
+                imgBase: 'Pantano',
+                imgExt: '.png',
+                icon: '🌿',
+                description: 'Pântano nebuloso com águas escuras.'
+            },
+            
+            floresta: {
+                id: 'floresta',
+                name: 'Floresta',
+                imgBase: 'Floresta',
+                imgExt: '.png',
+                icon: '🌲',
+                description: 'Floresta densa e sombria.'
+            },
+            
+            cidade: {
+                id: 'cidade',
+                name: 'Cidade',
+                imgBase: 'Cidade',
+                imgExt: '.png',
+                icon: '🏘️',
+                description: 'Pequena cidade portuária.'
+            }
+        };
+
+        // ========================================================================
+        // ESTADO DA APLICAÇÃO
+        // ========================================================================
+        
         let characters = [];
         let nextCharId = 1;
         let placingCharacter = null;
         let locationsVisible = true;
-        let draggingChar = null;
-        
-        // Multi-selection state
         let selectedCharacters = new Set();
         let isSelecting = false;
         let selectionStart = { x: 0, y: 0 };
         let isDraggingGroup = false;
         let dragGroupStart = { x: 0, y: 0 };
-
-        // Map switching state
-        let currentMap = 'general'; // 'general', 'montanha', 'floresta', 'cidade', 'caminho', 'pantano', 'mansao'
-        let charactersByMap = {
-            general: [],
-            montanha: [],
-            floresta: [],
-            cidade: [],
-            caminho: [],
-            pantano: [],
-            mansao: []
-        };
+        
+        // Navigation state
+        let navigationPath = ['general']; // Stack de navegação
+        let charactersByLocation = {}; // Personagens por localização
+        
+        // Day/Night mode
+        let isDayMode = false;
+        
+        // Inline name input
+        let pendingCharacterPosition = null;
+        
+        // Fog system
+        let fogEnabled = false;
+        let fogAreas = {}; // fogAreas por localização
+        
+        // Copy/Paste system
+        let copiedCharacters = [];
 
         // ========================================================================
-        // 📁 CONFIGURAÇÃO DE IMAGENS - COLOQUE SUAS IMAGENS AQUI!
+        // FUNÇÕES DE NAVEGAÇÃO
         // ========================================================================
-        // 
-        // IMPORTANTE: Para cada mapa, você precisa de 2 versões:
-        // - Uma versão DIA (com sufixo _dia.png)
-        // - Uma versão NOITE (com sufixo _noite.png)
-        // 
-        // Exemplos de nomes de arquivo:
-        // - Mapa_Geral_dia.png e Mapa_Geral_noite.png
-        // - montanha_dia.png e montanha_noite.png
-        // - Floresta_dia.png e Floresta_noite.png
-        // 
-        // O sistema vai alternar automaticamente entre elas quando você
-        // clicar no botão ☀️/🌙
-        //
-        // Se você só tiver uma versão de cada imagem (sem _dia/_noite),
-        // o sistema vai carregar a imagem padrão normalmente.
-        // ========================================================================
-
-        const mapData = {
-            general: { 
-                name: 'Mapa Geral da Ilha', 
-                imgBase: 'Mapa_Geral',  // ✅ Mapa_Geral_dia.png / Mapa_Geral_noite.png (FALTA CRIAR!)
-                imgExt: '.png',
-                showHotspots: true
-            },
-            montanha: { 
-                name: 'Montanha', 
-                imgBase: 'montanha',  // ✅ montanha_dia.png / montanha_noite.png (FALTA CRIAR!)
-                imgExt: '.png',
-                showHotspots: false
-            },
-            floresta: { 
-                name: 'Floresta', 
-                imgBase: 'Floresta',  // ✅ Floresta_dia.png (TEM!) / Floresta_noite.png (FALTA!)
-                imgExt: '.png',
-                showHotspots: false
-            },
-            cidade: { 
-                name: 'Cidade', 
-                imgBase: 'Cidade',  // ✅ Cidade_dia.png (TEM!) / Cidade_noite.png (FALTA!)
-                imgExt: '.png',
-                showHotspots: false
-            },
-            caminho: { 
-                name: 'Caminho', 
-                imgBase: 'Caminho_Mansão_Cidade',  // ✅ Caminho_Mansão_Cidade_dia.png (TEM!) / ..._noite.png (FALTA!)
-                imgExt: '.png',
-                showHotspots: false
-            },
-            pantano: { 
-                name: 'Pântano', 
-                imgBase: 'Pantano',  // ✅ Pantano_dia.png (TEM!) / Pantano_noite.png (TEM!)
-                imgExt: '.png',
-                showHotspots: false
-            },
-            mansao: { 
-                name: 'Mansão', 
-                imgBase: 'Mansao',  // ✅ Mansao_dia.png (TEM!) / Mansao_noite.png (TEM!) - SEM ACENTO
-                imgExt: '.png',
-                showHotspots: false
+        
+        function getCurrentLocation() {
+            return navigationPath[navigationPath.length - 1];
+        }
+        
+        function getLocationData(locationId) {
+            return mapHierarchy[locationId];
+        }
+        
+        function navigateToLocation(locationId) {
+            if (!mapHierarchy[locationId]) {
+                console.error('Location not found:', locationId);
+                return;
             }
-        };
-
-        // Estado do modo dia/noite
-        let isDayMode = false; // false = noite (padrão), true = dia
-
-        // Função para obter o caminho da imagem baseado no modo
-        function getMapImagePath(mapId) {
-            const map = mapData[mapId];
-            const suffix = isDayMode ? '_dia' : '_noite';
-            return map.imgBase + suffix + map.imgExt;
-        }
-
-        // ========================================================================
-        // FIM DA CONFIGURAÇÃO DE IMAGENS
-        // ========================================================================
-
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', () => {
-            setupEventListeners();
-            loadAllCharactersFromStorage();
-            setupMultiSelection();
-            setupRightClickPanel();
             
-            // Carregar modo dia/noite salvo
-            const savedMode = localStorage.getItem('rpgDayNightMode') || 'noite';
-            isDayMode = (savedMode === 'dia');
-            updateDayNightButton(savedMode);
-            
-            // Carregar último mapa visualizado (persistência)
-            const lastMap = localStorage.getItem('rpgLastViewedMap') || 'general';
-            switchToMap(lastMap);
-            
-            // Mostrar dica de botão direito na primeira vez
-            if (!localStorage.getItem('rpgRightClickHintShown')) {
-                showRightClickHint();
-                localStorage.setItem('rpgRightClickHintShown', 'true');
+            // Check if location has redirect
+            const locationData = mapHierarchy[locationId];
+            if (locationData.redirectTo) {
+                locationId = locationData.redirectTo;
             }
-        });
-
-        // ========== RIGHT CLICK PANEL CONTROL ==========
-        
-        function setupRightClickPanel() {
-            const mapContainer = document.getElementById('mapContainer');
-            const controlPanel = document.getElementById('controlPanel');
-            const mainContainer = document.querySelector('.map-container');
             
-            // Prevenir menu de contexto padrão no mapa
-            mapContainer.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                openControlPanel();
-                return false;
-            });
-            
-            // Fechar com ESC
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && controlPanel.classList.contains('visible')) {
-                    closeControlPanel();
-                }
-            });
-        }
-        
-        function openControlPanel() {
-            const controlPanel = document.getElementById('controlPanel');
-            const mainContainer = document.querySelector('.map-container');
-            
-            controlPanel.classList.add('visible');
-            mainContainer.classList.add('panel-open');
-        }
-        
-        function closeControlPanel() {
-            const controlPanel = document.getElementById('controlPanel');
-            const mainContainer = document.querySelector('.map-container');
-            
-            controlPanel.classList.remove('visible');
-            mainContainer.classList.remove('panel-open');
-        }
-        
-        function showRightClickHint() {
-            const hint = document.createElement('div');
-            hint.className = 'right-click-hint';
-            hint.innerHTML = '💡 <strong>Dica:</strong> Clique com botão direito no mapa para abrir o Painel de Controle';
-            document.body.appendChild(hint);
-            
-            setTimeout(() => {
-                hint.remove();
-            }, 5000);
-        }
-        
-        // ========== END RIGHT CLICK PANEL CONTROL ==========
-
-        // ========== DAY/NIGHT MODE SYSTEM ==========
-        
-        function toggleDayNight() {
-            const checkbox = document.getElementById('dayNightToggle');
-            
-            // Atualizar estado baseado no checkbox
-            isDayMode = checkbox.checked;
-            const newMode = isDayMode ? 'dia' : 'noite';
-            
-            // Salvar novo modo
-            localStorage.setItem('rpgDayNightMode', newMode);
-            
-            // Recarregar imagem do mapa atual
-            const mapImage = document.getElementById('mapImage');
-            mapImage.src = getMapImagePath(currentMap);
-        }
-        
-        function updateDayNightButton(mode) {
-            const checkbox = document.getElementById('dayNightToggle');
-            isDayMode = (mode === 'dia');
-            checkbox.checked = isDayMode;
-        }
-        
-        function updateAllLocationImages() {
-            // Atualizar todas as imagens dos painéis de detalhes
-            document.querySelectorAll('.location-image[data-map-id]').forEach(img => {
-                const mapId = img.getAttribute('data-map-id');
-                img.src = getMapImagePath(mapId);
-            });
-        }
-        
-        // ========== END DAY/NIGHT MODE SYSTEM ==========
-
-        function setupEventListeners() {
-            const mapContainer = document.getElementById('mapContainer');
-            const tooltip = document.getElementById('tooltip');
-
-            // Hotspots de localização
-            document.querySelectorAll('.location-hotspot').forEach(hotspot => {
-                hotspot.addEventListener('mouseenter', (e) => {
-                    tooltip.textContent = e.currentTarget.title;
-                    tooltip.style.opacity = '1';
-                });
-
-                hotspot.addEventListener('mousemove', (e) => {
-                    tooltip.style.left = (e.pageX + 15) + 'px';
-                    tooltip.style.top = (e.pageY + 15) + 'px';
-                });
-
-                hotspot.addEventListener('mouseleave', () => {
-                    tooltip.style.opacity = '0';
-                });
-
-                hotspot.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const location = hotspot.dataset.location;
-                    switchToMap(location);
-                });
-            });
-
-            // Clique no mapa para posicionar personagem
-            mapContainer.addEventListener('click', (e) => {
-                if (placingCharacter && e.target.classList.contains('map-image')) {
-                    const rect = e.target.getBoundingClientRect();
-                    const x = ((e.clientX - rect.left) / rect.width) * 100;
-                    const y = ((e.clientY - rect.top) / rect.height) * 100;
-                    
-                    placeCharacter(x, y);
-                }
-            });
-        }
-
-        // ========== MULTI-SELECTION SYSTEM ==========
-        
-        function setupMultiSelection() {
-            const mapContainer = document.getElementById('mapContainer');
-            const mapImage = document.getElementById('mapImage');
-            const selectionBox = document.getElementById('selectionBox');
-
-            // Mouse down - start selection or group drag
-            mapContainer.addEventListener('mousedown', (e) => {
-                // Ignore if placing character or clicking on hotspot
-                if (placingCharacter || e.target.classList.contains('hotspot-marker')) return;
-                
-                // Check if clicking on a character
-                const clickedChar = e.target.closest('.character-marker');
-                
-                if (clickedChar) {
-                    const charId = parseInt(clickedChar.id.replace('char-', ''));
-                    
-                    // Ctrl+Click para adicionar/remover da seleção
-                    if (e.ctrlKey || e.metaKey) {
-                        toggleCharacterSelection(charId);
-                        return;
-                    }
-                    
-                    // Se clicou em personagem já selecionado, inicia drag de grupo
-                    if (selectedCharacters.has(charId)) {
-                        isDraggingGroup = true;
-                        dragGroupStart = { x: e.clientX, y: e.clientY };
-                        mapContainer.style.cursor = 'grabbing';
-                        return;
-                    }
-                    
-                    // Se clicou em personagem não selecionado, seleciona apenas ele
-                    deselectAll();
-                    selectCharacter(charId);
-                    isDraggingGroup = true;
-                    dragGroupStart = { x: e.clientX, y: e.clientY };
-                    mapContainer.style.cursor = 'grabbing';
-                    return;
-                }
-                
-                // Se clicou no mapa vazio, inicia seleção por caixa
-                if (e.target === mapImage || e.target === mapContainer) {
-                    if (!e.ctrlKey && !e.metaKey) {
-                        deselectAll();
-                    }
-                    
-                    isSelecting = true;
-                    const rect = mapImage.getBoundingClientRect();
-                    selectionStart.x = e.clientX - rect.left;
-                    selectionStart.y = e.clientY - rect.top;
-                    
-                    selectionBox.style.left = selectionStart.x + 'px';
-                    selectionBox.style.top = selectionStart.y + 'px';
-                    selectionBox.style.width = '0px';
-                    selectionBox.style.height = '0px';
-                    selectionBox.classList.add('active');
-                    mapContainer.classList.add('selecting');
-                }
-            });
-
-            // Mouse move - update selection box or drag group
-            document.addEventListener('mousemove', (e) => {
-                if (isDraggingGroup) {
-                    const deltaX = e.clientX - dragGroupStart.x;
-                    const deltaY = e.clientY - dragGroupStart.y;
-                    
-                    const rect = mapImage.getBoundingClientRect();
-                    const deltaXPercent = (deltaX / rect.width) * 100;
-                    const deltaYPercent = (deltaY / rect.height) * 100;
-                    
-                    moveSelectedCharacters(deltaXPercent, deltaYPercent);
-                    
-                    dragGroupStart = { x: e.clientX, y: e.clientY };
-                    return;
-                }
-                
-                if (isSelecting) {
-                    const rect = mapImage.getBoundingClientRect();
-                    const currentX = e.clientX - rect.left;
-                    const currentY = e.clientY - rect.top;
-                    
-                    const width = Math.abs(currentX - selectionStart.x);
-                    const height = Math.abs(currentY - selectionStart.y);
-                    const left = Math.min(currentX, selectionStart.x);
-                    const top = Math.min(currentY, selectionStart.y);
-                    
-                    selectionBox.style.left = left + 'px';
-                    selectionBox.style.top = top + 'px';
-                    selectionBox.style.width = width + 'px';
-                    selectionBox.style.height = height + 'px';
-                    
-                    // Update selection in real-time
-                    updateSelectionInBox(left, top, width, height, rect);
-                }
-            });
-
-            // Mouse up - end selection or drag
-            document.addEventListener('mouseup', (e) => {
-                if (isDraggingGroup) {
-                    isDraggingGroup = false;
-                    mapContainer.style.cursor = '';
-                    saveCharactersToStorage();
-                }
-                
-                if (isSelecting) {
-                    isSelecting = false;
-                    selectionBox.classList.remove('active');
-                    mapContainer.classList.remove('selecting');
-                }
-            });
-
-            // Keyboard shortcuts
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Delete' || e.key === 'Backspace') {
-                    if (selectedCharacters.size > 0 && !e.target.matches('input, textarea')) {
-                        e.preventDefault();
-                        deleteSelected();
-                    }
-                }
-                
-                if (e.key === 'Escape') {
-                    deselectAll();
-                }
-                
-                // Ctrl+A para selecionar todos
-                if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
-                    e.preventDefault();
-                    selectAllCharacters();
-                }
-            });
-        }
-
-        function updateSelectionInBox(left, top, width, height, containerRect) {
-            characters.forEach(char => {
-                const marker = document.getElementById(`char-${char.id}`);
-                if (!marker) return;
-                
-                const markerRect = marker.getBoundingClientRect();
-                const markerX = markerRect.left + markerRect.width / 2 - containerRect.left;
-                const markerY = markerRect.top + markerRect.height / 2 - containerRect.top;
-                
-                const inBox = markerX >= left && markerX <= left + width &&
-                              markerY >= top && markerY <= top + height;
-                
-                if (inBox) {
-                    selectCharacter(char.id);
-                }
-            });
-        }
-
-        function selectCharacter(charId) {
-            selectedCharacters.add(charId);
-            const marker = document.getElementById(`char-${charId}`);
-            if (marker) {
-                marker.classList.add('selected');
-            }
-            updateSelectionCount();
-        }
-
-        function deselectCharacter(charId) {
-            selectedCharacters.delete(charId);
-            const marker = document.getElementById(`char-${charId}`);
-            if (marker) {
-                marker.classList.remove('selected');
-            }
-            updateSelectionCount();
-        }
-
-        function toggleCharacterSelection(charId) {
-            if (selectedCharacters.has(charId)) {
-                deselectCharacter(charId);
-            } else {
-                selectCharacter(charId);
-            }
-        }
-
-        function selectAllCharacters() {
-            characters.forEach(char => selectCharacter(char.id));
-        }
-
-        function deselectAll() {
-            selectedCharacters.forEach(charId => {
-                const marker = document.getElementById(`char-${charId}`);
-                if (marker) {
-                    marker.classList.remove('selected');
-                }
-            });
-            selectedCharacters.clear();
-            updateSelectionCount();
-        }
-
-        function moveSelectedCharacters(deltaX, deltaY) {
-            selectedCharacters.forEach(charId => {
-                const char = characters.find(c => c.id === charId);
-                if (char) {
-                    char.x = Math.max(0, Math.min(100, char.x + deltaX));
-                    char.y = Math.max(0, Math.min(100, char.y + deltaY));
-                    
-                    const marker = document.getElementById(`char-${charId}`);
-                    if (marker) {
-                        marker.style.left = `${char.x}%`;
-                        marker.style.top = `${char.y}%`;
-                    }
-                }
-            });
-        }
-
-        function deleteSelected() {
-            if (selectedCharacters.size === 0) return;
-            
-            const count = selectedCharacters.size;
-            if (confirm(`Remover ${count} personagem(ns) selecionado(s)?`)) {
-                selectedCharacters.forEach(charId => {
-                    const marker = document.getElementById(`char-${charId}`);
-                    if (marker) marker.remove();
-                    characters = characters.filter(c => c.id !== charId);
-                });
-                
-                selectedCharacters.clear();
-                updateCharactersList();
-                saveCharactersToStorage();
-                updateSelectionCount();
-            }
-        }
-
-        function updateSelectionCount() {
-            // Pode adicionar um contador visual aqui se quiser
-            const count = selectedCharacters.size;
-            if (count > 0) {
-                console.log(`${count} personagen(s) selecionado(s)`);
-            }
-        }
-
-        // ========== END MULTI-SELECTION SYSTEM ==========
-
-        // ========== MAP SWITCHING SYSTEM ==========
-
-        function switchToMap(mapId) {
-            // Save current map characters before switching
-            saveCurrentMapCharacters();
+            // Save current characters
+            saveCurrentLocationCharacters();
             
             // Clear selection
             deselectAll();
             
-            // Update current map
-            currentMap = mapId;
+            // Add to navigation path
+            navigationPath.push(locationId);
             
-            // Salvar mapa atual para persistência
-            localStorage.setItem('rpgLastViewedMap', mapId);
+            // Load location
+            loadLocation(locationId);
             
-            // Update map image with day/night version
+            // Save to storage
+            saveNavigationState();
+        }
+        
+        function goBackOneLevel() {
+            if (navigationPath.length <= 1) return;
+            
+            // Save current characters
+            saveCurrentLocationCharacters();
+            
+            // Clear selection
+            deselectAll();
+            
+            // Remove last from path
+            navigationPath.pop();
+            
+            // Load previous location
+            const locationId = getCurrentLocation();
+            loadLocation(locationId);
+            
+            // Save to storage
+            saveNavigationState();
+        }
+        
+        function navigateToBreadcrumb(index) {
+            if (index < 0 || index >= navigationPath.length) return;
+            if (index === navigationPath.length - 1) return; // Already here
+            
+            // Save current characters
+            saveCurrentLocationCharacters();
+            
+            // Clear selection
+            deselectAll();
+            
+            // Cut path at index
+            navigationPath = navigationPath.slice(0, index + 1);
+            
+            // Load location
+            const locationId = getCurrentLocation();
+            loadLocation(locationId);
+            
+            // Save to storage
+            saveNavigationState();
+        }
+        
+        function loadLocation(locationId) {
+            const locationData = getLocationData(locationId);
+            if (!locationData) return;
+            
+            // Update map image
             const mapImage = document.getElementById('mapImage');
-            mapImage.src = getMapImagePath(mapId);
+            
+            // Verificar se o mapa tem versão dia/noite
+            if (locationData.hasDayNight === false) {
+                // Mapa sem versão dia/noite - usar só a base
+                mapImage.src = locationData.imgBase + locationData.imgExt;
+            } else {
+                // Mapa com versão dia/noite
+                const suffix = isDayMode ? '_dia' : '_noite';
+                mapImage.src = locationData.imgBase + suffix + locationData.imgExt;
+            }
+            
+            mapImage.onerror = function() {
+                this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect fill="%231a1612" width="800" height="600"/><text x="50%" y="50%" font-family="Arial" font-size="20" fill="%23d4c5a9" text-anchor="middle">Imagem não encontrada: ' + locationData.name + '</text></svg>';
+            };
             
             // Update title
-            document.getElementById('currentMapTitle').textContent = mapData[mapId].name;
+            document.getElementById('currentMapTitle').textContent = locationData.name;
+            
+            // Update breadcrumb
+            updateBreadcrumb();
             
             // Show/hide back button
             const backButton = document.getElementById('backButton');
-            if (mapId === 'general') {
-                backButton.classList.remove('visible');
-            } else {
-                backButton.classList.add('visible');
+            backButton.classList.toggle('visible', navigationPath.length > 1);
+            
+            // Clear and update hotspots
+            clearHotspots();
+            if (locationData.hotspots) {
+                createHotspots(locationData.hotspots);
             }
             
-            // Show/hide hotspots
-            const hotspots = document.querySelectorAll('.location-hotspot');
-            hotspots.forEach(hotspot => {
-                hotspot.style.display = mapData[mapId].showHotspots ? 'block' : 'none';
-            });
+            // Adicionar hotspot secreto se estiver no B3 da montanha
+            if (locationId === 'montanha_subsolo_3') {
+                const secretHotspot = {
+                    id: 'caminho_secreto',
+                    title: '🔐 Passagem Secreta para o Pântano',
+                    position: { top: '50%', left: '70%' }
+                };
+                createHotspots([secretHotspot]);
+            }
             
-            // Update toggle locations button
+            // Show/hide floor selector
+            updateFloorSelector(locationData);
+            
+            // Update locations toggle button
             const toggleBtn = document.getElementById('toggleLocationsBtn');
-            if (mapId === 'general') {
+            if (locationId === 'general' && locationData.hotspots) {
                 toggleBtn.style.display = 'block';
-                toggleBtn.textContent = locationsVisible ? '📍 Ocultar Locais' : '📍 Mostrar Locais';
             } else {
                 toggleBtn.style.display = 'none';
             }
             
-            // Clear all character markers from DOM
-            document.querySelectorAll('.character-marker').forEach(marker => marker.remove());
+            // Load characters for this location
+            loadCharactersForLocation(locationId);
+        }
+        
+        function updateBreadcrumb() {
+            const breadcrumb = document.getElementById('breadcrumb');
+            breadcrumb.innerHTML = '';
             
-            // Load characters for this map
-            characters = charactersByMap[mapId] || [];
-            characters.forEach(char => renderCharacter(char));
+            // Mostrar apenas o local atual (último item do path)
+            const currentLocationId = navigationPath[navigationPath.length - 1];
+            const locationData = getLocationData(currentLocationId);
             
-            updateCharactersList();
+            if (!locationData) return;
             
-            // Hide location details panel
-            document.getElementById('defaultMessage').style.display = 'none';
-            document.querySelectorAll('.location-details').forEach(loc => {
-                loc.classList.remove('active');
+            const item = document.createElement('div');
+            item.className = 'breadcrumb-item';
+            item.innerHTML = `<span class="breadcrumb-current">${locationData.icon} ${locationData.name}</span>`;
+            
+            breadcrumb.appendChild(item);
+        }
+        
+        function updateFloorSelector(locationData) {
+            // Floor selector desabilitado - navegação apenas por hotspots
+            const floorSelector = document.getElementById('floorSelector');
+            floorSelector.innerHTML = '';
+            floorSelector.classList.remove('visible');
+            return;
+        }
+        
+        function navigateToFloor(floorId) {
+            // Save current characters
+            saveCurrentLocationCharacters();
+            
+            // Clear selection
+            deselectAll();
+            
+            // Get current location to check if we need to update navigation path
+            const currentLocationId = getCurrentLocation();
+            const currentLocationData = getLocationData(currentLocationId);
+            const targetLocationData = getLocationData(floorId);
+            
+            // Se estamos em um sistema de andares e mudando de andar, substitui o último na pilha
+            if (currentLocationData.parentFloorSystem && 
+                targetLocationData.parentFloorSystem === currentLocationData.parentFloorSystem) {
+                // Substituir último andar
+                navigationPath[navigationPath.length - 1] = floorId;
+            } else if (currentLocationData.hasFloors) {
+                // Entrando em um andar pela primeira vez
+                navigationPath.push(floorId);
+            } else {
+                // Navegação normal
+                navigationPath.push(floorId);
+            }
+            
+            // Load new floor
+            loadLocation(floorId);
+            
+            // Save to storage
+            saveNavigationState();
+        }
+        
+        function clearHotspots() {
+            document.querySelectorAll('.hotspot').forEach(h => h.remove());
+        }
+        
+        function createHotspots(hotspots) {
+            const mapContainer = document.getElementById('mapContainer');
+            
+            hotspots.forEach(hotspot => {
+                const hotspotEl = document.createElement('div');
+                hotspotEl.className = 'hotspot location-hotspot';
+                hotspotEl.title = hotspot.title;
+                hotspotEl.dataset.location = hotspot.id;
+                
+                // Set position
+                Object.entries(hotspot.position).forEach(([key, value]) => {
+                    hotspotEl.style[key] = value;
+                });
+                
+                // Create marker with appropriate class
+                let markerClass = 'hotspot-marker';
+                if (hotspot.isSecret) {
+                    markerClass += ' secret';
+                } else if (hotspot.isHidden) {
+                    markerClass += ' hidden';
+                }
+                hotspotEl.innerHTML = `<div class="${markerClass}"></div>`;
+                
+                // Add events
+                hotspotEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    hideHotspotTooltip();
+                    
+                    // Check if it's a point of interest
+                    const targetLocation = mapHierarchy[hotspot.id];
+                    if (targetLocation && targetLocation.isPointOfInterest) {
+                        // Show description instead of navigating
+                        alert(`🎹 ${targetLocation.name}\n\n${targetLocation.description}`);
+                    } else {
+                        navigateToLocation(hotspot.id);
+                    }
+                });
+                
+                hotspotEl.addEventListener('mouseenter', showHotspotTooltip);
+                hotspotEl.addEventListener('mousemove', moveHotspotTooltip);
+                hotspotEl.addEventListener('mouseleave', hideHotspotTooltip);
+                
+                mapContainer.appendChild(hotspotEl);
             });
         }
-
-        function switchToGeneralMap() {
-            switchToMap('general');
+        
+        function showHotspotTooltip(e) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.textContent = e.currentTarget.title;
+            tooltip.style.opacity = '1';
+        }
+        
+        function moveHotspotTooltip(e) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.left = (e.pageX + 15) + 'px';
+            tooltip.style.top = (e.pageY + 15) + 'px';
+        }
+        
+        function hideHotspotTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.opacity = '0';
         }
 
-        function saveCurrentMapCharacters() {
-            charactersByMap[currentMap] = [...characters];
-            saveAllCharactersToStorage();
-        }
-
-        // ========== END MAP SWITCHING SYSTEM ==========
-
-        function toggleCharacterMode() {
-            const form = document.getElementById('characterForm');
-            const isVisible = form.style.display !== 'none';
-            form.style.display = isVisible ? 'none' : 'block';
-            
-            if (!isVisible) {
-                document.getElementById('defaultMessage').style.display = 'none';
-                document.querySelectorAll('.location-details').forEach(loc => {
-                    loc.classList.remove('active');
-                });
-            }
-        }
-
-        function startPlacingCharacter() {
-            const name = document.getElementById('charName').value.trim();
-            const type = document.getElementById('charType').value;
-            const icon = document.getElementById('charIcon').value.trim() || getDefaultIcon(type);
-
-            if (!name) {
-                alert('Por favor, insira um nome para o personagem!');
+        // ========================================================================
+        // COPY/PASTE SYSTEM
+        // ========================================================================
+        
+        function copySelectedCharacters() {
+            if (selectedCharacters.size === 0) {
+                alert('⚠️ Selecione personagens primeiro para copiar!');
                 return;
             }
-
-            placingCharacter = { name, type, icon };
-            document.getElementById('mapContainer').classList.add('placing-character');
-            alert('Clique no mapa para posicionar o personagem');
+            
+            // Copiar dados dos personagens selecionados
+            copiedCharacters = [];
+            selectedCharacters.forEach(charId => {
+                const char = characters.find(c => c.id === charId);
+                if (char) {
+                    // Copiar sem o ID para criar novos IDs ao colar
+                    copiedCharacters.push({
+                        name: char.name,
+                        type: char.type,
+                        icon: char.icon,
+                        x: char.x,
+                        y: char.y
+                    });
+                }
+            });
+            
+            // Habilitar botão de colar
+            const pasteBtn = document.getElementById('pasteBtn');
+            pasteBtn.disabled = false;
+            pasteBtn.classList.add('active');
+            
+            // Feedback visual
+            const copyBtn = document.getElementById('copyBtn');
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = `✓ ${copiedCharacters.length} Copiado(s)`;
+            copyBtn.style.background = '#4d6446';
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.style.background = '';
+            }, 2000);
         }
-
-        function getDefaultIcon(type) {
-            const icons = {
-                player: '🧑',
-                npc: '👤',
-                enemy: '⚔️',
-                mystery: '❓'
+        
+        function pasteCharacters() {
+            if (copiedCharacters.length === 0) {
+                alert('⚠️ Nenhum personagem copiado!');
+                return;
+            }
+            
+            // Colar personagens com novos IDs
+            copiedCharacters.forEach(charData => {
+                const newChar = {
+                    id: nextCharId++,
+                    name: charData.name,
+                    type: charData.type,
+                    icon: charData.icon,
+                    x: charData.x,
+                    y: charData.y
+                };
+                
+                characters.push(newChar);
+                renderCharacter(newChar);
+            });
+            
+            saveCurrentLocationCharacters();
+            
+            // Feedback visual
+            const pasteBtn = document.getElementById('pasteBtn');
+            const originalText = pasteBtn.innerHTML;
+            pasteBtn.innerHTML = `✓ ${copiedCharacters.length} Colado(s)`;
+            pasteBtn.style.background = '#4d6446';
+            
+            setTimeout(() => {
+                pasteBtn.innerHTML = originalText;
+                pasteBtn.style.background = '';
+            }, 2000);
+        }
+        
+        // Atalhos de teclado para copiar/colar
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+C / Cmd+C - Copiar
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !e.target.matches('input, textarea')) {
+                if (selectedCharacters.size > 0) {
+                    e.preventDefault();
+                    copySelectedCharacters();
+                }
+            }
+            
+            // Ctrl+V / Cmd+V - Colar
+            if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !e.target.matches('input, textarea')) {
+                if (copiedCharacters.length > 0) {
+                    e.preventDefault();
+                    pasteCharacters();
+                }
+            }
+            
+            // F - Toggle Névoa (apenas quando NÃO está digitando)
+            if (e.key === 'f' && !e.target.matches('input, textarea')) {
+                e.preventDefault();
+                toggleAllFog();
+            }
+            
+            // ============================================================
+            // ATALHOS DE NAVEGAÇÃO ENTRE MAPAS
+            // ============================================================
+            
+            // Apenas quando NÃO está digitando
+            if (!e.target.matches('input, textarea')) {
+                
+                // Tecla 1 - Mansão
+                if (e.key === '1') {
+                    e.preventDefault();
+                    navigateToLocation('mansao');
+                }
+                
+                // Tecla 2 - Cidade
+                if (e.key === '2') {
+                    e.preventDefault();
+                    navigateToLocation('cidade');
+                }
+                
+                // Tecla 3 - Caminho
+                if (e.key === '3') {
+                    e.preventDefault();
+                    navigateToLocation('caminho');
+                }
+                
+                // Tecla 4 - Pântano
+                if (e.key === '4') {
+                    e.preventDefault();
+                    navigateToLocation('pantano');
+                }
+                
+                // Tecla 5 - Montanha
+                if (e.key === '5') {
+                    e.preventDefault();
+                    navigateToLocation('montanha');
+                }
+                
+                // Tecla 6 - Floresta
+                if (e.key === '6') {
+                    e.preventDefault();
+                    navigateToLocation('floresta');
+                }
+                
+                // Tecla 0 - Voltar para Mapa Geral
+                if (e.key === '0') {
+                    e.preventDefault();
+                    navigateToLocation('general');
+                }
+                
+                // Backspace - Voltar no histórico de navegação
+                if (e.key === 'Backspace') {
+                    e.preventDefault();
+                    navigateBack();
+                }
+            }
+        });
+        
+        // ========================================================================
+        // SIMPLE CHARACTER CREATION
+        // ========================================================================
+        
+        function quickAddCharacter() {
+            // Ativar modo de colocação imediatamente
+            placingCharacter = {
+                pending: true // Flag indicando que precisa pedir nome depois
             };
-            return icons[type] || '👤';
+            
+            document.getElementById('mapContainer').classList.add('placing-character');
+            
         }
-
+        
+        // ========================================================================
+        // CHARACTER MANAGEMENT
+        // ========================================================================
+        
+        function saveCurrentLocationCharacters() {
+            const locationId = getCurrentLocation();
+            charactersByLocation[locationId] = [...characters];
+            saveAllCharactersToStorage();
+        }
+        
+        function loadCharactersForLocation(locationId) {
+            // Clear DOM
+            document.querySelectorAll('.character-marker').forEach(m => m.remove());
+            
+            // Load characters
+            characters = charactersByLocation[locationId] || [];
+            characters.forEach(char => renderCharacter(char));
+            
+        }
+        
         function placeCharacter(x, y) {
             if (!placingCharacter) return;
 
+            // Guardar a posição onde clicou
+            pendingCharacterPosition = { x, y };
+            
+            // Calcular posição do input no mapa (em pixels)
+            const mapImage = document.getElementById('mapImage');
+            const rect = mapImage.getBoundingClientRect();
+            const pixelX = (x / 100) * rect.width;
+            const pixelY = (y / 100) * rect.height;
+            
+            // Posicionar o input inline
+            const inlineInput = document.getElementById('inlineNameInput');
+            inlineInput.style.left = pixelX + 'px';
+            inlineInput.style.top = pixelY + 'px';
+            inlineInput.classList.add('active');
+            
+            // Focar no campo
+            const field = document.getElementById('inlineNameField');
+            field.value = '';
+            setTimeout(() => field.focus(), 100);
+            
+            // Esconder indicador
+            
+        }
+        
+        function confirmInlineName() {
+            const name = document.getElementById('inlineNameField').value.trim();
+            
+            if (!name) {
+                alert('Por favor, digite um nome!');
+                return;
+            }
+            
+            // Criar personagem
             const character = {
                 id: nextCharId++,
-                ...placingCharacter,
-                x: x,
-                y: y
+                name: name,
+                type: 'player',
+                icon: '👤',
+                x: pendingCharacterPosition.x,
+                y: pendingCharacterPosition.y
             };
-
+            
             characters.push(character);
             renderCharacter(character);
-            updateCharactersList();
-            saveCharactersToStorage();
-
-            // Reset
-            placingCharacter = null;
-            document.getElementById('mapContainer').classList.remove('placing-character');
-            document.getElementById('charName').value = '';
-            document.getElementById('charIcon').value = '';
+            saveCurrentLocationCharacters();
+            
+            // Limpar tudo
+            closeInlineNameInput();
         }
-
+        
+        function cancelInlineName() {
+            closeInlineNameInput();
+        }
+        
+        function closeInlineNameInput() {
+            document.getElementById('inlineNameInput').classList.remove('active');
+            document.getElementById('inlineNameField').value = '';
+            placingCharacter = null;
+            pendingCharacterPosition = null;
+            document.getElementById('mapContainer').classList.remove('placing-character');
+            
+        }
+        
         function renderCharacter(char) {
             const mapContainer = document.getElementById('mapContainer');
             const marker = document.createElement('div');
@@ -1643,17 +1919,18 @@
 
             mapContainer.appendChild(marker);
         }
-
+        
         function removeCharacter(charId) {
-            if (confirm('Remover este personagem do mapa?')) {
-                characters = characters.filter(c => c.id !== charId);
-                const marker = document.getElementById(`char-${charId}`);
-                if (marker) marker.remove();
-                updateCharactersList();
-                saveCharactersToStorage();
-            }
+            // Remover direto sem confirmação
+            characters = characters.filter(c => c.id !== charId);
+            const marker = document.getElementById(`char-${charId}`);
+            if (marker) marker.remove();
+            saveCurrentLocationCharacters();
+            
+            // Remover da seleção se estiver selecionado
+            selectedCharacters.delete(charId);
         }
-
+        
         function updateCharactersList() {
             const list = document.getElementById('charactersList');
             
@@ -1682,7 +1959,7 @@
                 </div>
             `).join('');
         }
-
+        
         function focusCharacter(charId) {
             const marker = document.getElementById(`char-${charId}`);
             if (marker) {
@@ -1694,22 +1971,298 @@
             }
         }
 
-        function clearAllCharacters() {
-            if (characters.length === 0) return;
+        // ========================================================================
+        // MULTI-SELECTION SYSTEM
+        // ========================================================================
+        
+        function setupMultiSelection() {
+            const mapContainer = document.getElementById('mapContainer');
+            const mapImage = document.getElementById('mapImage');
+            const selectionBox = document.getElementById('selectionBox');
             
-            if (confirm(`Remover todos os ${characters.length} personagens do mapa?`)) {
-                characters.forEach(char => {
-                    const marker = document.getElementById(`char-${char.id}`);
-                    if (marker) marker.remove();
-                });
-                characters = [];
-                updateCharactersList();
-                saveCharactersToStorage();
+            // CRUCIAL: Prevenir drag da imagem
+            mapImage.addEventListener('dragstart', (e) => {
+                e.preventDefault();
+                return false;
+            });
+            
+            // Prevenir seleção de texto
+            mapImage.style.userSelect = 'none';
+            mapImage.style.webkitUserSelect = 'none';
+            mapImage.style.mozUserSelect = 'none';
+
+            mapContainer.addEventListener('mousedown', (e) => {
+                // Não fazer nada se está colocando personagem
+                if (placingCharacter) {
+                    // NÃO prevenir default quando está colocando - deixa o click passar
+                    return;
+                }
+                
+                // Não fazer nada se clicou em hotspot
+                if (e.target.classList.contains('hotspot-marker') || e.target.closest('.hotspot')) return;
+                
+                // Prevenir comportamento padrão do navegador
+                e.preventDefault();
+                
+                const clickedChar = e.target.closest('.character-marker');
+                
+                // Se clicou em um personagem
+                if (clickedChar) {
+                    const charId = parseInt(clickedChar.id.replace('char-', ''));
+                    
+                    // Ctrl+Click = adicionar/remover da seleção
+                    if (e.ctrlKey || e.metaKey) {
+                        toggleCharacterSelection(charId);
+                        return;
+                    }
+                    
+                    // Se já está selecionado, iniciar drag do grupo
+                    if (selectedCharacters.has(charId)) {
+                        isDraggingGroup = true;
+                        isSelecting = false;
+                        dragGroupStart = { x: e.clientX, y: e.clientY };
+                        mapContainer.style.cursor = 'grabbing';
+                        return;
+                    }
+                    
+                    // Se não está selecionado, selecionar só ele e iniciar drag
+                    deselectAll();
+                    selectCharacter(charId);
+                    isDraggingGroup = true;
+                    isSelecting = false;
+                    dragGroupStart = { x: e.clientX, y: e.clientY };
+                    mapContainer.style.cursor = 'grabbing';
+                    return;
+                }
+                
+                // Se clicou no mapa vazio = iniciar seleção por área
+                if (e.target === mapImage || e.target === mapContainer) {
+                    if (!e.ctrlKey && !e.metaKey) {
+                        deselectAll();
+                    }
+                    
+                    // Forçar que não está arrastando
+                    isDraggingGroup = false;
+                    isSelecting = true;
+                    
+                    const rect = mapImage.getBoundingClientRect();
+                    selectionStart.x = e.clientX - rect.left;
+                    selectionStart.y = e.clientY - rect.top;
+                    
+                    selectionBox.style.left = selectionStart.x + 'px';
+                    selectionBox.style.top = selectionStart.y + 'px';
+                    selectionBox.style.width = '0px';
+                    selectionBox.style.height = '0px';
+                    selectionBox.classList.add('active');
+                    mapContainer.classList.add('selecting');
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                // Se está arrastando personagens
+                if (isDraggingGroup && !isSelecting) {
+                    e.preventDefault();
+                    const deltaX = e.clientX - dragGroupStart.x;
+                    const deltaY = e.clientY - dragGroupStart.y;
+                    
+                    const rect = mapImage.getBoundingClientRect();
+                    const deltaXPercent = (deltaX / rect.width) * 100;
+                    const deltaYPercent = (deltaY / rect.height) * 100;
+                    
+                    moveSelectedCharacters(deltaXPercent, deltaYPercent);
+                    
+                    dragGroupStart = { x: e.clientX, y: e.clientY };
+                    return;
+                }
+                
+                // Se está selecionando área
+                if (isSelecting && !isDraggingGroup) {
+                    e.preventDefault();
+                    const rect = mapImage.getBoundingClientRect();
+                    const currentX = e.clientX - rect.left;
+                    const currentY = e.clientY - rect.top;
+                    
+                    const width = Math.abs(currentX - selectionStart.x);
+                    const height = Math.abs(currentY - selectionStart.y);
+                    const left = Math.min(currentX, selectionStart.x);
+                    const top = Math.min(currentY, selectionStart.y);
+                    
+                    selectionBox.style.left = left + 'px';
+                    selectionBox.style.top = top + 'px';
+                    selectionBox.style.width = width + 'px';
+                    selectionBox.style.height = height + 'px';
+                    
+                    updateSelectionInBox(left, top, width, height, rect);
+                }
+            });
+
+            document.addEventListener('mouseup', (e) => {
+                if (isDraggingGroup) {
+                    isDraggingGroup = false;
+                    mapContainer.style.cursor = '';
+                    saveCurrentLocationCharacters();
+                }
+                
+                if (isSelecting) {
+                    isSelecting = false;
+                    selectionBox.classList.remove('active');
+                    mapContainer.classList.remove('selecting');
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    if (selectedCharacters.size > 0 && !e.target.matches('input, textarea')) {
+                        e.preventDefault();
+                        deleteSelected();
+                    }
+                }
+                
+                if (e.key === 'Escape') {
+                    deselectAll();
+                    // Cancelar input inline se estiver ativo
+                    if (document.getElementById('inlineNameInput').classList.contains('active')) {
+                        cancelInlineName();
+                    }
+                    // Cancelar criação de personagem se estiver ativa
+                    if (placingCharacter) {
+                        placingCharacter = null;
+                        document.getElementById('mapContainer').classList.remove('placing-character');
+                        
+                    }
+                }
+                
+                // Enter para confirmar nome
+                if (e.key === 'Enter' && document.getElementById('inlineNameInput').classList.contains('active')) {
+                    confirmInlineName();
+                }
+            });
+        }
+
+        function updateSelectionInBox(left, top, width, height, containerRect) {
+            characters.forEach(char => {
+                const marker = document.getElementById(`char-${char.id}`);
+                if (!marker) return;
+                
+                const markerRect = marker.getBoundingClientRect();
+                const markerX = markerRect.left + markerRect.width / 2 - containerRect.left;
+                const markerY = markerRect.top + markerRect.height / 2 - containerRect.top;
+                
+                const inBox = markerX >= left && markerX <= left + width &&
+                              markerY >= top && markerY <= top + height;
+                
+                if (inBox) {
+                    selectCharacter(char.id);
+                }
+            });
+        }
+
+        function selectCharacter(charId) {
+            selectedCharacters.add(charId);
+            const marker = document.getElementById(`char-${charId}`);
+            if (marker) {
+                marker.classList.add('selected');
             }
         }
 
+        function deselectCharacter(charId) {
+            selectedCharacters.delete(charId);
+            const marker = document.getElementById(`char-${charId}`);
+            if (marker) {
+                marker.classList.remove('selected');
+            }
+        }
+
+        function toggleCharacterSelection(charId) {
+            if (selectedCharacters.has(charId)) {
+                deselectCharacter(charId);
+            } else {
+                selectCharacter(charId);
+            }
+        }
+
+        function deselectAll() {
+            selectedCharacters.forEach(charId => {
+                const marker = document.getElementById(`char-${charId}`);
+                if (marker) {
+                    marker.classList.remove('selected');
+                }
+            });
+            selectedCharacters.clear();
+        }
+
+        function moveSelectedCharacters(deltaX, deltaY) {
+            selectedCharacters.forEach(charId => {
+                const char = characters.find(c => c.id === charId);
+                if (char) {
+                    char.x = Math.max(0, Math.min(100, char.x + deltaX));
+                    char.y = Math.max(0, Math.min(100, char.y + deltaY));
+                    
+                    const marker = document.getElementById(`char-${charId}`);
+                    if (marker) {
+                        marker.style.left = `${char.x}%`;
+                        marker.style.top = `${char.y}%`;
+                    }
+                }
+            });
+        }
+
+        function deleteSelected() {
+            if (selectedCharacters.size === 0) return;
+            
+            // Deletar direto sem confirmação
+            selectedCharacters.forEach(charId => {
+                const marker = document.getElementById(`char-${charId}`);
+                if (marker) marker.remove();
+                characters = characters.filter(c => c.id !== charId);
+            });
+            
+            selectedCharacters.clear();
+            saveCurrentLocationCharacters();
+        }
+
+        // ========================================================================
+        // FOG OF WAR SYSTEM
+        // ========================================================================
+        
+        function toggleAllFog() {
+            fogEnabled = !fogEnabled;
+            const fogLayer = document.getElementById('fogLayer');
+            
+            if (fogEnabled) {
+                fogLayer.classList.add('active');
+            } else {
+                fogLayer.classList.remove('active');
+            }
+        }
+        
+        // ========================================================================
+        // DAY/NIGHT SYSTEM
+        // ========================================================================
+        
+        function toggleDayNight() {
+            const checkbox = document.getElementById('dayNightToggle');
+            isDayMode = checkbox.checked;
+            
+            localStorage.setItem('rpgDayNightMode', isDayMode ? 'dia' : 'noite');
+            
+            // Reload current map image
+            const locationId = getCurrentLocation();
+            const locationData = getLocationData(locationId);
+            if (locationData) {
+                const mapImage = document.getElementById('mapImage');
+                const suffix = isDayMode ? '_dia' : '_noite';
+                mapImage.src = locationData.imgBase + suffix + locationData.imgExt;
+            }
+        }
+
+        // ========================================================================
+        // UTILITY FUNCTIONS
+        // ========================================================================
+        
         function toggleLocations() {
-            if (currentMap !== 'general') return;
+            const locationId = getCurrentLocation();
+            if (locationId !== 'general') return;
             
             locationsVisible = !locationsVisible;
             document.querySelectorAll('.location-hotspot').forEach(hotspot => {
@@ -1720,155 +2273,106 @@
             toggleBtn.textContent = locationsVisible ? '📍 Ocultar Locais' : '📍 Mostrar Locais';
         }
 
-        function showLocation(locationId) {
-            document.querySelectorAll('.location-details').forEach(loc => {
-                loc.classList.remove('active');
-            });
-            
-            document.getElementById('defaultMessage').style.display = 'none';
-            document.getElementById('characterForm').style.display = 'none';
-            
-            const selectedLocation = document.getElementById(locationId);
-            if (selectedLocation) {
-                selectedLocation.classList.add('active');
+        // ========================================================================
+        // STORAGE FUNCTIONS
+        // ========================================================================
+        
+        function saveNavigationState() {
+            localStorage.setItem('rpgNavigationPath', JSON.stringify(navigationPath));
+        }
+        
+        function loadNavigationState() {
+            const saved = localStorage.getItem('rpgNavigationPath');
+            if (saved) {
+                try {
+                    navigationPath = JSON.parse(saved);
+                    if (navigationPath.length === 0) {
+                        navigationPath = ['general'];
+                    }
+                } catch (e) {
+                    navigationPath = ['general'];
+                }
             }
         }
-
-        // LocalStorage
+        
         function saveAllCharactersToStorage() {
-            // First save current map
-            charactersByMap[currentMap] = [...characters];
+            // Save current location first
+            const locationId = getCurrentLocation();
+            charactersByLocation[locationId] = [...characters];
             
-            // Calculate next ID across all maps
+            // Calculate next ID
             let maxId = 0;
-            Object.values(charactersByMap).forEach(mapChars => {
-                mapChars.forEach(char => {
+            Object.values(charactersByLocation).forEach(locationChars => {
+                locationChars.forEach(char => {
                     if (char.id > maxId) maxId = char.id;
                 });
             });
             
             const saveData = {
-                charactersByMap: charactersByMap,
+                charactersByLocation: charactersByLocation,
                 nextCharId: maxId + 1
             };
             
-            localStorage.setItem('rpgMapCharactersV2', JSON.stringify(saveData));
+            localStorage.setItem('rpgMapCharactersV3', JSON.stringify(saveData));
         }
-
+        
         function loadAllCharactersFromStorage() {
-            const saved = localStorage.getItem('rpgMapCharactersV2');
+            const saved = localStorage.getItem('rpgMapCharactersV3');
             if (saved) {
                 try {
                     const saveData = JSON.parse(saved);
-                    charactersByMap = saveData.charactersByMap || {
-                        general: [],
-                        montanha: [],
-                        floresta: [],
-                        cidade: [],
-                        caminho: [],
-                        pantano: [],
-                        mansao: []
-                    };
+                    charactersByLocation = saveData.charactersByLocation || {};
                     nextCharId = saveData.nextCharId || 1;
                 } catch (e) {
                     console.error('Error loading characters:', e);
+                    charactersByLocation = {};
+                    nextCharId = 1;
                 }
             }
         }
 
-        // Keep for compatibility
-        function saveCharactersToStorage() {
-            saveAllCharactersToStorage();
-        }
-
-        function loadCharactersFromStorage() {
-            loadAllCharactersFromStorage();
-        }
-
         // ========================================================================
-        // 📁 CONFIGURAÇÃO DE IMAGENS PARA O LIGHTBOX (visualização em tela cheia)
-        // ========================================================================
-        // O lightbox também usa o sistema dia/noite automaticamente
+        // EVENT LISTENERS
         // ========================================================================
         
-        // Lightbox para visualização de mapas
-        const mapLocations = [
-            { id: 'montanha', name: 'Montanha', desc: 'Um pico rochoso envolto em névoa antinatural que parece emanar da própria montanha.' },
-            { id: 'floresta', name: 'Floresta', desc: 'Floresta espessa com vegetação cerrada e antigas cabanas de caçadores abandonadas.' },
-            { id: 'cidade', name: 'Cidade', desc: 'Pequena vila pesqueira dos anos 1920 com construções de madeira desgastadas.' },
-            { id: 'caminho', name: 'Caminho', desc: 'Estrada de terra que conecta a vila à mansão no alto da colina.' },
-            { id: 'pantano', name: 'Pântano', desc: 'Área alagada com pontes de madeira precárias e vegetação aquática.' },
-            { id: 'mansao', name: 'Mansão', desc: 'Grande mansão vitoriana em estado de abandono no topo de uma colina.' }
-        ];
+        function setupEventListeners() {
+            const mapContainer = document.getElementById('mapContainer');
+            const mapImage = document.getElementById('mapImage');
 
-        let currentLightboxIndex = 0;
-
-        // Adicionar evento de clique nas imagens de localização
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                document.querySelectorAll('.location-image').forEach(img => {
-                    img.addEventListener('click', function() {
-                        const locationId = this.closest('.location-details').id;
-                        openLightbox(locationId);
-                    });
-                });
-            }, 100);
-        });
-
-        function openLightbox(locationId) {
-            const locationIndex = mapLocations.findIndex(loc => loc.id === locationId);
-            if (locationIndex !== -1) {
-                currentLightboxIndex = locationIndex;
-                showLightboxContent();
-                document.getElementById('lightbox').classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-        }
-
-        function showLightboxContent() {
-            const location = mapLocations[currentLightboxIndex];
-            document.getElementById('lightboxTitle').textContent = location.name;
-            document.getElementById('lightboxImage').src = getMapImagePath(location.id);
-            document.getElementById('lightboxImage').alt = location.name;
-            document.getElementById('lightboxInfo').textContent = location.desc;
-        }
-
-        function closeLightbox() {
-            document.getElementById('lightbox').classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
-
-        function navigateLightbox(direction) {
-            currentLightboxIndex += direction;
-            
-            if (currentLightboxIndex < 0) {
-                currentLightboxIndex = mapLocations.length - 1;
-            } else if (currentLightboxIndex >= mapLocations.length) {
-                currentLightboxIndex = 0;
-            }
-            
-            showLightboxContent();
-        }
-
-        // Fechar lightbox com ESC
-        document.addEventListener('keydown', (e) => {
-            const lightbox = document.getElementById('lightbox');
-            if (lightbox.classList.contains('active')) {
-                if (e.key === 'Escape') {
-                    closeLightbox();
-                } else if (e.key === 'ArrowLeft') {
-                    navigateLightbox(-1);
-                } else if (e.key === 'ArrowRight') {
-                    navigateLightbox(1);
+            // Click to place character
+            mapContainer.addEventListener('click', (e) => {
+                if (placingCharacter) {
+                    // Aceitar clique na imagem OU no container
+                    if (e.target.classList.contains('map-image') || e.target === mapContainer) {
+                        const rect = mapImage.getBoundingClientRect();
+                        const x = ((e.clientX - rect.left) / rect.width) * 100;
+                        const y = ((e.clientY - rect.top) / rect.height) * 100;
+                        
+                        placeCharacter(x, y);
+                    }
                 }
-            }
-        });
+            });
+        }
 
-        // Fechar lightbox clicando fora da imagem
-        document.getElementById('lightbox').addEventListener('click', (e) => {
-            if (e.target.id === 'lightbox') {
-                closeLightbox();
-            }
+        // ========================================================================
+        // INITIALIZATION
+        // ========================================================================
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            setupMultiSelection();
+            
+            // Load saved data
+            loadAllCharactersFromStorage();
+            loadNavigationState();
+            
+            const savedMode = localStorage.getItem('rpgDayNightMode') || 'noite';
+            isDayMode = (savedMode === 'dia');
+            document.getElementById('dayNightToggle').checked = isDayMode;
+            
+            // Load current location
+            const locationId = getCurrentLocation();
+            loadLocation(locationId);
         });
     </script>
 </body>
