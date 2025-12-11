@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa da Ilha - RPG 1920s (Sistema de Andares)</title>
+    <title>Mapa da Ilha - RPG 1920s</title>
     <style>
         * {
             margin: 0;
@@ -886,22 +886,7 @@
             }
         }
 
-        /* Fog Control Button */
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 215, 0, 0.95);
-            color: #1a1612;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 1.1em;
-            font-weight: bold;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-            z-index: 10000;
-            display: none;
-            animation: pulse 2s infinite;
-        }
+    
 
         .placing-mode-indicator.active {
             display: block;
@@ -1002,7 +987,6 @@
     <div class="container">
         <header>
             <h1>ILHA ESPIRAL</h1>
-            <p class="subtitle">Sistema de Navegação por Andares</p>
         </header>
 
         <div class="map-container">
@@ -1106,12 +1090,12 @@
                 imgExt: '.png',
                 icon: '🏝️',
                 hotspots: [
-                    { id: 'mansao', title: 'Mansão', position: { top: '18%', left: '25%' } },
+                    { id: 'mansao', title: 'Mansão', position: { top: '20%', left: '25%' } },
                     { id: 'montanha', title: 'Montanha', position: { top: '25%', right: '20%' } },
                     { id: 'floresta', title: 'Floresta', position: { top: '45%', right: '20%' } },
                     { id: 'cidade', title: 'Cidade', position: { top: '75%', right: '25%' } },
                     { id: 'caminho', title: 'Caminho', position: { top: '55%', left: '60%' } },
-                    { id: 'pantano', title: 'Pântano', position: { top: '50%', left: '15%' } }
+                    { id: 'pantano', title: 'Pântano', position: { top: '50%', left: '20%' } }
                 ]
             },
             
@@ -1257,7 +1241,7 @@
                 description: 'Segundo nível das cavernas.',
                 parentFloorSystem: 'montanha',
                 hotspots: [
-                    { id: 'montanha_subsolo1', title: 'Porta de Ferro - Voltar B1', position: { top: '49%', right: '13%' } },
+                    { id: 'montanha_subsolo1', title: 'Porta de Ferro - Voltar B1', position: { top: '48%', right: '8%' } },
                     { id: 'montanha_subsolo3', title: 'Espiral Mística - Descer B3', position: { top: '18%', left: '50%' }, isHidden: true }
                 ]
             },
@@ -1341,7 +1325,51 @@
                 imgBase: 'Cidade',
                 imgExt: '.png',
                 icon: '🏘️',
-                description: 'Pequena cidade portuária.'
+                description: 'Pequena cidade portuária.',
+                hotspots: [
+                    { id: 'igreja', title: 'Igreja', position: { top: '50%', left: '72%' }, dayOnly: true },
+                    { id: 'pescador', title: 'Banca do Pescador', position: { top: '53%', right: '10%' }, dayOnly: true },
+                    { id: 'vendedor', title: 'Vendedor', position: { top: '56%', left: '34%' } }
+                ]
+            },
+            
+            igreja: {
+                id: 'igreja',
+                name: 'Igreja',
+                imgBase: 'igreja',
+                imgExt: '.png',
+                hasDayNight: false,
+                icon: '⛪',
+                description: 'Interior da igreja.',
+                hotspots: [
+                    { id: 'cidade', title: 'Sair da Igreja', position: { bottom: '4%', left: '93%' } }
+                ]
+            },
+            
+            pescador: {
+                id: 'pescador',
+                name: 'Casa do Pescador',
+                imgBase: 'pescador',
+                imgExt: '.png',
+                hasDayNight: false,
+                icon: '🎣',
+                description: 'Banca simples do pescador local.',
+                hotspots: [
+                    { id: 'cidade', title: 'Sair da Casa', position: { bottom: '4%', left: '93%' } }
+                ]
+            },
+            
+            vendedor: {
+                id: 'vendedor',
+                name: 'Vendedor',
+                imgBase: 'vendedor',
+                imgExt: '.png',
+                hasDayNight: false,
+                icon: '🏪',
+                description: 'Loja do vendedor local.',
+                hotspots: [
+                    { id: 'cidade', title: 'Sair da Loja', position: { bottom: '4%', left: '93%' } }
+                ]
             }
         };
 
@@ -1584,6 +1612,11 @@
             const mapContainer = document.getElementById('mapContainer');
             
             hotspots.forEach(hotspot => {
+                // Verificar se hotspot só funciona de dia
+                if (hotspot.dayOnly && !isDayMode) {
+                    return; // Não criar hotspot à noite
+                }
+                
                 const hotspotEl = document.createElement('div');
                 hotspotEl.className = 'hotspot location-hotspot';
                 hotspotEl.title = hotspot.title;
@@ -2253,6 +2286,12 @@
                 const mapImage = document.getElementById('mapImage');
                 const suffix = isDayMode ? '_dia' : '_noite';
                 mapImage.src = locationData.imgBase + suffix + locationData.imgExt;
+                
+                // Recarregar hotspots para atualizar dayOnly
+                clearHotspots();
+                if (locationData.hotspots) {
+                    createHotspots(locationData.hotspots);
+                }
             }
         }
 
