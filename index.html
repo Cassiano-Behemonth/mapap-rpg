@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa da Ilha - RPG 1920s</title>
+    <title>Mapa da Ilha - RPG 1920s (Sistema de Andares)</title>
     <style>
         * {
             margin: 0;
@@ -886,7 +886,22 @@
             }
         }
 
-    
+        /* Fog Control Button */
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 215, 0, 0.95);
+            color: #1a1612;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            z-index: 10000;
+            display: none;
+            animation: pulse 2s infinite;
+        }
 
         .placing-mode-indicator.active {
             display: block;
@@ -1090,12 +1105,12 @@
                 imgExt: '.png',
                 icon: '🏝️',
                 hotspots: [
-                    { id: 'mansao', title: 'Mansão', position: { top: '20%', left: '25%' } },
+                    { id: 'mansao', title: 'Mansão', position: { top: '12%', left: '25%' } },
                     { id: 'montanha', title: 'Montanha', position: { top: '25%', right: '20%' } },
                     { id: 'floresta', title: 'Floresta', position: { top: '45%', right: '20%' } },
                     { id: 'cidade', title: 'Cidade', position: { top: '75%', right: '25%' } },
                     { id: 'caminho', title: 'Caminho', position: { top: '55%', left: '60%' } },
-                    { id: 'pantano', title: 'Pântano', position: { top: '50%', left: '20%' } }
+                    { id: 'pantano', title: 'Pântano', position: { top: '50%', left: '15%' } }
                 ]
             },
             
@@ -1403,6 +1418,10 @@
         
         // Copy/Paste system
         let copiedCharacters = [];
+        
+        // Token system
+        let placingToken = null;
+        let tokens = [];
 
         // ========================================================================
         // FUNÇÕES DE NAVEGAÇÃO
@@ -1612,11 +1631,6 @@
             const mapContainer = document.getElementById('mapContainer');
             
             hotspots.forEach(hotspot => {
-                // Verificar se hotspot só funciona de dia
-                if (hotspot.dayOnly && !isDayMode) {
-                    return; // Não criar hotspot à noite
-                }
-                
                 const hotspotEl = document.createElement('div');
                 hotspotEl.className = 'hotspot location-hotspot';
                 hotspotEl.title = hotspot.title;
@@ -1776,6 +1790,16 @@
             if (e.key === 'f' && !e.target.matches('input, textarea')) {
                 e.preventDefault();
                 toggleAllFog();
+            }
+            
+            // ============================================================
+            // TOKENS POR TECLA
+            // ============================================================
+            
+            // M - Wendigo
+            if (e.key === 'm' && !e.target.matches('input, textarea')) {
+                e.preventDefault();
+                startPlacingToken('wendigo.png', 'Wendigo');
             }
             
             // ============================================================
@@ -2038,6 +2062,17 @@
                 e.preventDefault();
                 
                 const clickedChar = e.target.closest('.character-marker');
+                const clickedToken = e.target.closest('.token-marker');
+                
+                // Se clicou em um TOKEN
+                if (clickedToken && clickedToken.dataset.selected === 'true') {
+                    // Token selecionado - iniciar drag do grupo (personagens + tokens)
+                    isDraggingGroup = true;
+                    isSelecting = false;
+                    dragGroupStart = { x: e.clientX, y: e.clientY };
+                    mapContainer.style.cursor = 'grabbing';
+                    return;
+                }
                 
                 // Se clicou em um personagem
                 if (clickedChar) {
@@ -2145,10 +2180,17 @@
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Delete' || e.key === 'Backspace') {
-                    if (selectedCharacters.size > 0 && !e.target.matches('input, textarea')) {
+                    if ((selectedCharacters.size > 0 || hasSelectedToken()) && !e.target.matches('input, textarea')) {
                         e.preventDefault();
                         deleteSelected();
+                        deleteSelectedToken();
                     }
+                }
+                
+                // Espelhar tokens selecionados com setas
+                if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && hasSelectedToken() && !e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    flipSelectedTokens();
                 }
                 
                 if (e.key === 'Escape') {
@@ -2173,6 +2215,7 @@
         }
 
         function updateSelectionInBox(left, top, width, height, containerRect) {
+            // Selecionar PERSONAGENS na caixa
             characters.forEach(char => {
                 const marker = document.getElementById(`char-${char.id}`);
                 if (!marker) return;
@@ -2186,6 +2229,23 @@
                 
                 if (inBox) {
                     selectCharacter(char.id);
+                }
+            });
+            
+            // Selecionar TOKENS na caixa
+            tokens.forEach(token => {
+                const marker = document.getElementById(`token-${token.id}`);
+                if (!marker) return;
+                
+                const markerRect = marker.getBoundingClientRect();
+                const markerX = markerRect.left + markerRect.width / 2 - containerRect.left;
+                const markerY = markerRect.top + markerRect.height / 2 - containerRect.top;
+                
+                const inBox = markerX >= left && markerX <= left + width &&
+                              markerY >= top && markerY <= top + height;
+                
+                if (inBox) {
+                    selectToken(marker);
                 }
             });
         }
@@ -2215,6 +2275,7 @@
         }
 
         function deselectAll() {
+            // Deselecionar personagens
             selectedCharacters.forEach(charId => {
                 const marker = document.getElementById(`char-${charId}`);
                 if (marker) {
@@ -2222,9 +2283,17 @@
                 }
             });
             selectedCharacters.clear();
+            
+            // Deselecionar tokens
+            document.querySelectorAll('.token-marker').forEach(t => {
+                t.style.border = 'none';
+                t.style.boxShadow = 'none';
+                t.dataset.selected = 'false';
+            });
         }
 
         function moveSelectedCharacters(deltaX, deltaY) {
+            // Mover PERSONAGENS selecionados
             selectedCharacters.forEach(charId => {
                 const char = characters.find(c => c.id === charId);
                 if (char) {
@@ -2236,6 +2305,19 @@
                         marker.style.left = `${char.x}%`;
                         marker.style.top = `${char.y}%`;
                     }
+                }
+            });
+            
+            // Mover TOKENS selecionados
+            document.querySelectorAll('.token-marker[data-selected="true"]').forEach(tokenEl => {
+                const tokenId = parseInt(tokenEl.id.replace('token-', ''));
+                const token = tokens.find(t => t.id === tokenId);
+                if (token) {
+                    token.x = Math.max(0, Math.min(100, token.x + deltaX));
+                    token.y = Math.max(0, Math.min(100, token.y + deltaY));
+                    
+                    tokenEl.style.left = `${token.x}%`;
+                    tokenEl.style.top = `${token.y}%`;
                 }
             });
         }
@@ -2252,6 +2334,212 @@
             
             selectedCharacters.clear();
             saveCurrentLocationCharacters();
+        }
+
+        // ========================================================================
+        // TOKEN SYSTEM
+        // ========================================================================
+        
+        function startPlacingToken(imageSrc, name) {
+            placingToken = {
+                imageSrc: imageSrc,
+                name: name
+            };
+            document.getElementById('mapContainer').style.cursor = 'crosshair';
+        }
+        
+        function placeToken(x, y) {
+            if (!placingToken) return;
+            
+            const token = {
+                id: Date.now(),
+                imageSrc: placingToken.imageSrc,
+                name: placingToken.name,
+                x: x,
+                y: y
+            };
+            
+            tokens.push(token);
+            renderToken(token);
+            
+            // Reset
+            placingToken = null;
+            document.getElementById('mapContainer').style.cursor = '';
+        }
+        
+        function renderToken(token) {
+            const mapContainer = document.getElementById('mapContainer');
+            const tokenEl = document.createElement('div');
+            tokenEl.className = 'token-marker';
+            tokenEl.id = `token-${token.id}`;
+            tokenEl.style.left = `${token.x}%`;
+            tokenEl.style.top = `${token.y}%`;
+            tokenEl.style.width = '240px';  // 6x maior que personagens (40px)
+            tokenEl.style.height = '240px'; // 6x maior que personagens (40px)
+            tokenEl.style.position = 'absolute';
+            tokenEl.style.transform = 'translate(-50%, -50%)';
+            tokenEl.style.cursor = 'move';
+            tokenEl.style.zIndex = '25';
+            tokenEl.style.borderRadius = '50%'; // Circular!
+            
+            const img = document.createElement('img');
+            img.src = token.imageSrc;
+            img.alt = token.name;
+            img.title = token.name;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'contain';
+            img.style.pointerEvents = 'none';
+            img.style.borderRadius = '50%'; // Circular!
+            img.style.transition = 'transform 0.2s ease'; // Suavizar flip
+            
+            // Inicializar flip
+            if (!token.flipped) token.flipped = false;
+            img.style.transform = token.flipped ? 'scaleX(-1)' : 'scaleX(1)';
+            
+            img.onerror = function() {
+                this.style.display = 'none';
+                tokenEl.innerHTML = `<div style="width:100%;height:100%;background:rgba(200,0,0,0.5);border:2px solid red;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:2em;">❌</div>`;
+            };
+            
+            tokenEl.appendChild(img);
+            mapContainer.appendChild(tokenEl);
+            
+            makeTokenDraggable(tokenEl, token);
+        }
+        
+        function makeTokenDraggable(tokenEl, token) {
+            let isDragging = false;
+            let hasMoved = false;
+            let startX, startY, initialLeft, initialTop;
+            
+            // Mousedown - Iniciar drag
+            tokenEl.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                
+                // Se já está selecionado com outros, não arrastar individualmente
+                // Deixa o sistema de grupo lidar com isso
+                if (tokenEl.dataset.selected === 'true' && (selectedCharacters.size > 0 || hasMultipleSelectedTokens())) {
+                    return;
+                }
+                
+                hasMoved = false;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                const rect = tokenEl.getBoundingClientRect();
+                const container = document.getElementById('mapContainer').getBoundingClientRect();
+                initialLeft = rect.left - container.left;
+                initialTop = rect.top - container.top;
+                
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            
+            // Click - Selecionar (só se não arrastou)
+            tokenEl.addEventListener('click', (e) => {
+                if (!hasMoved) {
+                    e.stopPropagation();
+                    selectToken(tokenEl);
+                }
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                
+                // Se moveu mais de 3 pixels, considera como drag
+                if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                    hasMoved = true;
+                    tokenEl.style.opacity = '0.7';
+                }
+                
+                const newLeft = initialLeft + dx;
+                const newTop = initialTop + dy;
+                
+                tokenEl.style.left = newLeft + 'px';
+                tokenEl.style.top = newTop + 'px';
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    tokenEl.style.opacity = '1';
+                    
+                    if (hasMoved) {
+                        // Update token position
+                        const mapImage = document.getElementById('mapImage');
+                        const rect = mapImage.getBoundingClientRect();
+                        const tokenRect = tokenEl.getBoundingClientRect();
+                        
+                        token.x = ((tokenRect.left + tokenRect.width/2 - rect.left) / rect.width) * 100;
+                        token.y = ((tokenRect.top + tokenRect.height/2 - rect.top) / rect.height) * 100;
+                        
+                        tokenEl.style.left = `${token.x}%`;
+                        tokenEl.style.top = `${token.y}%`;
+                    }
+                    
+                    hasMoved = false;
+                }
+            });
+        }
+        
+        function selectToken(tokenEl) {
+            // Deselect all tokens
+            document.querySelectorAll('.token-marker').forEach(t => {
+                t.style.border = 'none';
+                t.style.boxShadow = 'none';
+            });
+            
+            // Select this token - borda circular dourada
+            tokenEl.style.border = '3px solid #FFD700';
+            tokenEl.style.boxShadow = '0 0 15px rgba(255, 215, 0, 0.6)';
+            tokenEl.dataset.selected = 'true';
+        }
+        
+        function hasSelectedToken() {
+            return document.querySelector('.token-marker[data-selected="true"]') !== null;
+        }
+        
+        function hasMultipleSelectedTokens() {
+            return document.querySelectorAll('.token-marker[data-selected="true"]').length > 1;
+        }
+        
+        function flipSelectedTokens() {
+            document.querySelectorAll('.token-marker[data-selected="true"]').forEach(tokenEl => {
+                const tokenId = parseInt(tokenEl.id.replace('token-', ''));
+                const token = tokens.find(t => t.id === tokenId);
+                if (token) {
+                    // Inverter estado de flip
+                    token.flipped = !token.flipped;
+                    
+                    // Aplicar espelhamento na imagem
+                    const img = tokenEl.querySelector('img');
+                    if (img) {
+                        img.style.transform = token.flipped ? 'scaleX(-1)' : 'scaleX(1)';
+                    }
+                }
+            });
+        }
+        
+        function deleteSelectedToken() {
+            const selectedToken = document.querySelector('.token-marker[data-selected="true"]');
+            if (!selectedToken) return;
+            
+            // Get token ID from element
+            const tokenId = parseInt(selectedToken.id.replace('token-', ''));
+            
+            // Remove from DOM
+            selectedToken.remove();
+            
+            // Remove from array
+            const index = tokens.findIndex(t => t.id === tokenId);
+            if (index > -1) {
+                tokens.splice(index, 1);
+            }
         }
 
         // ========================================================================
@@ -2286,12 +2574,6 @@
                 const mapImage = document.getElementById('mapImage');
                 const suffix = isDayMode ? '_dia' : '_noite';
                 mapImage.src = locationData.imgBase + suffix + locationData.imgExt;
-                
-                // Recarregar hotspots para atualizar dayOnly
-                clearHotspots();
-                if (locationData.hotspots) {
-                    createHotspots(locationData.hotspots);
-                }
             }
         }
 
@@ -2378,8 +2660,21 @@
             const mapContainer = document.getElementById('mapContainer');
             const mapImage = document.getElementById('mapImage');
 
-            // Click to place character
+            // Click to place character or token
             mapContainer.addEventListener('click', (e) => {
+                // Se está colocando token
+                if (placingToken) {
+                    if (e.target.classList.contains('map-image') || e.target === mapContainer) {
+                        const rect = mapImage.getBoundingClientRect();
+                        const x = ((e.clientX - rect.left) / rect.width) * 100;
+                        const y = ((e.clientY - rect.top) / rect.height) * 100;
+                        
+                        placeToken(x, y);
+                    }
+                    return;
+                }
+                
+                // Se está colocando personagem
                 if (placingCharacter) {
                     // Aceitar clique na imagem OU no container
                     if (e.target.classList.contains('map-image') || e.target === mapContainer) {
